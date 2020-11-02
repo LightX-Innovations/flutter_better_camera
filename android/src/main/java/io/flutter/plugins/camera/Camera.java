@@ -86,7 +86,7 @@ public class Camera {
     private Integer sensorSensitivity;
     private Float lensAperture; // as f-number
     private Long sensorExposure; // as nanoseconds
-    private RggbChannelVector whiteBalanceGain;
+    private Integer whiteBalance;
 
     private CameraDevice cameraDevice;
     private CameraCaptureSession mCaptureSession;
@@ -109,7 +109,6 @@ public class Camera {
     private int mFlash = Constants.FLASH_OFF;
 
     private CameraCharacteristics mCameraCharacteristics;
-    private int mWhiteBalance = Constants.WB_AUTO;
     private boolean mManualFocusEngaged = false;
 
     private Range<Integer> aeFPSRange;
@@ -424,9 +423,9 @@ public class Camera {
                 }
             }
 
-            if (whiteBalanceGain != null) {
+            if (whiteBalance != null) {
                 captureBuilder.set(CaptureRequest.COLOR_CORRECTION_MODE, CaptureRequest.COLOR_CORRECTION_MODE_TRANSFORM_MATRIX);
-                captureBuilder.set(CaptureRequest.COLOR_CORRECTION_GAINS, whiteBalanceGain);
+                captureBuilder.set(CaptureRequest.COLOR_CORRECTION_GAINS, colorTemperature(whiteBalance));
             }
 
             captureBuilder.set(CaptureRequest.JPEG_ORIENTATION, getMediaOrientation());
@@ -543,39 +542,6 @@ public class Camera {
         cameraDevice.createCaptureSession(surfaceList, callback, null);
     }
 
-
-    /**
-     * Updates the internal state of white balance to {@link #mWhiteBalance}.
-     */
-    void updateWhiteBalance() {
-        switch (mWhiteBalance) {
-            case Constants.WB_AUTO:
-                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE,
-                        CaptureRequest.CONTROL_AWB_MODE_AUTO);
-                break;
-            case Constants.WB_CLOUDY:
-                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE,
-                        CaptureRequest.CONTROL_AWB_MODE_CLOUDY_DAYLIGHT);
-                break;
-            case Constants.WB_FLUORESCENT:
-                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE,
-                        CaptureRequest.CONTROL_AWB_MODE_FLUORESCENT);
-                break;
-            case Constants.WB_INCANDESCENT:
-                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE,
-                        CaptureRequest.CONTROL_AWB_MODE_INCANDESCENT);
-                break;
-            case Constants.WB_SHADOW:
-                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE,
-                        CaptureRequest.CONTROL_AWB_MODE_SHADE);
-                break;
-            case Constants.WB_SUNNY:
-                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE,
-                        CaptureRequest.CONTROL_AWB_MODE_DAYLIGHT);
-                break;
-        }
-    }
-
     void setFlash(int flash) {
         if (mFlash == flash) {
             return;
@@ -594,7 +560,6 @@ public class Camera {
             }
         }
     }
-
 
     /**
      * Updates the internal state of flash to {@link #mFlash}.
@@ -811,8 +776,59 @@ public class Camera {
         this.sensorExposure = sensorExposure;
     }
 
-    public void setWhiteBalanceGain() {
-        // TODO
+    public void setWhiteBalanceGain(int whiteBalance) {
+        this.whiteBalance = whiteBalance;
+    }
+
+    // https://stackoverflow.com/a/35886771/11263383
+    public static RggbChannelVector colorTemperature(int whiteBalance) {
+        float temperature = whiteBalance / 100f;
+        float red;
+        float green;
+        float blue;
+
+        //Calculate red
+        if (temperature <= 66)
+            red = 255;
+        else {
+            red = temperature - 60;
+            red = (float) (329.698727446 * (Math.pow((double) red, -0.1332047592)));
+            if (red < 0)
+                red = 0;
+            if (red > 255)
+                red = 255;
+        }
+
+
+        //Calculate green
+        if (temperature <= 66) {
+            green = temperature;
+            green = (float) (99.4708025861 * Math.log(green) - 161.1195681661);
+        } else {
+            green = temperature - 60;
+            green = (float) (288.1221695283 * (Math.pow((double) green, -0.0755148492)));
+        }
+        if (green < 0)
+            green = 0;
+        if (green > 255)
+            green = 255;
+
+        //calculate blue
+        if (temperature >= 66)
+            blue = 255;
+        else if (temperature <= 19)
+            blue = 0;
+        else {
+            blue = temperature - 10;
+            blue = (float) (138.5177312231 * Math.log(blue) - 305.0447927307);
+            if (blue < 0)
+                blue = 0;
+            if (blue > 255)
+                blue = 255;
+        }
+
+        Log.v(TAG, "red=" + red + ", green=" + green + ", blue=" + blue);
+        return new RggbChannelVector((red / 255) * 2, (green / 255), (green / 255), (blue / 255) * 2);
     }
 
     private void closeCaptureSession() {
