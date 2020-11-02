@@ -190,7 +190,7 @@ final class MethodCallHandlerImpl implements MethodChannel.MethodCallHandler {
                 result.success(null);
                 break;
             case "setWhiteBalanceGain":
-                camera.setWhiteBalanceGain((int) call.argument("whiteBalanceGain"));
+                camera.setWhiteBalanceGain((int) call.argument("whiteBalance"));
                 result.success(null);
                 break;
             case "dispose": {
