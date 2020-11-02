@@ -179,16 +179,19 @@ final class MethodCallHandlerImpl implements MethodChannel.MethodCallHandler {
                 break;
             case "setSensorSensitivity":
                 camera.setSensorSensitivity((int) call.argument("sensorSensitivity"));
+                result.success(null);
                 break;
             case "setLensAperture":
                 camera.setLensAperture((float) call.argument("lensAperture"));
+                result.success(null);
                 break;
             case "setSensorExposure":
                 camera.setSensorExposure((long) call.argument("sensorExposure"));
+                result.success(null);
                 break;
             case "setWhiteBalanceGain":
-                // TODO
-                result.notImplemented();
+                camera.setWhiteBalanceGain((int) call.argument("whiteBalanceGain"));
+                result.success(null);
                 break;
             case "dispose": {
                 if (camera != null) {
