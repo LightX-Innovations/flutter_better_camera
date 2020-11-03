@@ -667,7 +667,7 @@ class CameraController extends ValueNotifier<CameraValue> {
     if (!value.isInitialized || _isDisposed) {
       throw CameraException(
         'Uninitialized CameraController.',
-        'hasFlash was called on uninitialized CameraController',
+        'supportSensorSensitivity was called on uninitialized CameraController',
       );
     }
 
@@ -682,7 +682,7 @@ class CameraController extends ValueNotifier<CameraValue> {
     if (!value.isInitialized || _isDisposed) {
       throw CameraException(
         'Uninitialized CameraController.',
-        'hasFlash was called on uninitialized CameraController',
+        'supportLensAperture was called on uninitialized CameraController',
       );
     }
 
@@ -697,7 +697,7 @@ class CameraController extends ValueNotifier<CameraValue> {
     if (!value.isInitialized || _isDisposed) {
       throw CameraException(
         'Uninitialized CameraController.',
-        'hasFlash was called on uninitialized CameraController',
+        'supportShutterSpeed was called on uninitialized CameraController',
       );
     }
 
@@ -712,7 +712,7 @@ class CameraController extends ValueNotifier<CameraValue> {
     if (!value.isInitialized || _isDisposed) {
       throw CameraException(
         'Uninitialized CameraController.',
-        'hasFlash was called on uninitialized CameraController',
+        'supportWhiteBalance was called on uninitialized CameraController',
       );
     }
 
@@ -727,7 +727,7 @@ class CameraController extends ValueNotifier<CameraValue> {
     if (!value.isInitialized || _isDisposed) {
       throw CameraException(
         'Uninitialized CameraController.',
-        'hasFlash was called on uninitialized CameraController',
+        'setSensorSensitivity was called on uninitialized CameraController',
       );
     }
 
@@ -742,12 +742,12 @@ class CameraController extends ValueNotifier<CameraValue> {
     if (!value.isInitialized || _isDisposed) {
       throw CameraException(
         'Uninitialized CameraController.',
-        'hasFlash was called on uninitialized CameraController',
+        'setLensAperture was called on uninitialized CameraController',
       );
     }
 
     try {
-      await _channel.invokeMethod('setSensorSensitivity', <String, dynamic>{'lensAperture': lensAperture});
+      await _channel.invokeMethod('setLensAperture', <String, dynamic>{'lensAperture': lensAperture});
     } on PlatformException catch (e) {
       throw CameraException(e.code, e.message);
     }
@@ -757,12 +757,12 @@ class CameraController extends ValueNotifier<CameraValue> {
     if (!value.isInitialized || _isDisposed) {
       throw CameraException(
         'Uninitialized CameraController.',
-        'hasFlash was called on uninitialized CameraController',
+        'setSensorExposure was called on uninitialized CameraController',
       );
     }
 
     try {
-      await _channel.invokeMethod('setSensorSensitivity', <String, dynamic>{'sensorExposure': sensorExposure});
+      await _channel.invokeMethod('setSensorExposure', <String, dynamic>{'sensorExposure': sensorExposure});
     } on PlatformException catch (e) {
       throw CameraException(e.code, e.message);
     }
@@ -772,12 +772,12 @@ class CameraController extends ValueNotifier<CameraValue> {
     if (!value.isInitialized || _isDisposed) {
       throw CameraException(
         'Uninitialized CameraController.',
-        'hasFlash was called on uninitialized CameraController',
+        'setWhiteBalanceGain was called on uninitialized CameraController',
       );
     }
 
     try {
-      await _channel.invokeMethod('setSensorSensitivity', <String, dynamic>{'whiteBalance': whiteBalance});
+      await _channel.invokeMethod('setWhiteBalanceGain', <String, dynamic>{'whiteBalance': whiteBalance});
     } on PlatformException catch (e) {
       throw CameraException(e.code, e.message);
     }
