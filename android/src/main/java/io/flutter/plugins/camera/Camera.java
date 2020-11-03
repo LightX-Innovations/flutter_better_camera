@@ -766,18 +766,54 @@ public class Camera {
 
     public void setSensorSensitivity(int sensorSensitivity) {
         this.sensorSensitivity = sensorSensitivity;
+
+        if (mPreviewRequestBuilder != null) {
+            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_OFF);
+            mPreviewRequestBuilder.set(CaptureRequest.SENSOR_SENSITIVITY, sensorSensitivity);
+        }
+
+        if (!getCameraCompatibility().isSensorSensitivitySupported()) {
+            Log.d(TAG, "Sensor sensitivity (iso) not supported");
+        }
     }
 
     public void setLensAperture(float lensAperture) {
         this.lensAperture = lensAperture;
+
+        if (mPreviewRequestBuilder != null) {
+            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_OFF);
+            mPreviewRequestBuilder.set(CaptureRequest.LENS_APERTURE, lensAperture);
+        }
+
+        if (!getCameraCompatibility().isLensApertureSupported()) {
+            Log.d(TAG, "Lens aperture not supported");
+        }
     }
 
     public void setSensorExposure(long sensorExposure) {
         this.sensorExposure = sensorExposure;
+
+        if (mPreviewRequestBuilder != null) {
+            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_OFF);
+            mPreviewRequestBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME, sensorExposure);
+        }
+
+        if (!getCameraCompatibility().isShutterSpeedSupported()) {
+            Log.d(TAG, "Sensor exposure (shutter speed) not supported");
+        }
     }
 
     public void setWhiteBalanceGain(int whiteBalance) {
         this.whiteBalance = whiteBalance;
+
+        if (mPreviewRequestBuilder != null) {
+            mPreviewRequestBuilder.set(CaptureRequest.COLOR_CORRECTION_MODE, CaptureRequest.COLOR_CORRECTION_MODE_TRANSFORM_MATRIX);
+            mPreviewRequestBuilder.set(CaptureRequest.COLOR_CORRECTION_GAINS, colorTemperature(whiteBalance));
+        }
+
+        if (!getCameraCompatibility().isWhiteBalanceSupported()) {
+            Log.d(TAG, "White balance not supported");
+        }
     }
 
     // https://stackoverflow.com/a/35886771/11263383
