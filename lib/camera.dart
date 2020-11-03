@@ -783,7 +783,7 @@ class CameraController extends ValueNotifier<CameraValue> {
     }
   }
 
-  /// White balance (color temparature) => int value
+  /// White balance (color temperature) => int value representing the temperature in kelvin
   Future<void> setWhiteBalanceGain(int whiteBalance) async {
     if (!value.isInitialized || _isDisposed) {
       throw CameraException(
