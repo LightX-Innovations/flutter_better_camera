@@ -663,6 +663,8 @@ class CameraController extends ValueNotifier<CameraValue> {
   }
 
   /// ISO
+  /// iOS should support it
+  /// Android support depends on device manufacturer
   Future<bool> get supportSensorSensitivity async {
     if (!value.isInitialized || _isDisposed) {
       throw CameraException(
@@ -678,6 +680,9 @@ class CameraController extends ValueNotifier<CameraValue> {
     }
   }
 
+  /// Lens aperture
+  /// iOS does not support it
+  /// Android support depends on device manufacturer and hardware
   Future<bool> get supportLensAperture async {
     if (!value.isInitialized || _isDisposed) {
       throw CameraException(
@@ -693,6 +698,10 @@ class CameraController extends ValueNotifier<CameraValue> {
     }
   }
 
+  /// Shutter speed (sensor exposure)
+  /// iOS should support it
+  /// Android support depends on device manufacturer
+  /// Device may have min and max value
   Future<bool> get supportShutterSpeed async {
     if (!value.isInitialized || _isDisposed) {
       throw CameraException(
@@ -708,6 +717,9 @@ class CameraController extends ValueNotifier<CameraValue> {
     }
   }
 
+  /// White balance (color temperature)
+  /// iOS should support it
+  /// Android support depends on device manufacturer
   Future<bool> get supportWhiteBalance async {
     if (!value.isInitialized || _isDisposed) {
       throw CameraException(
@@ -723,6 +735,7 @@ class CameraController extends ValueNotifier<CameraValue> {
     }
   }
 
+  /// ISO => int value
   Future<void> setSensorSensitivity(int sensitivity) async {
     if (!value.isInitialized || _isDisposed) {
       throw CameraException(
@@ -738,6 +751,7 @@ class CameraController extends ValueNotifier<CameraValue> {
     }
   }
 
+  /// Lens aperture => float value (f-number)
   Future<void> setLensAperture(double lensAperture) async {
     if (!value.isInitialized || _isDisposed) {
       throw CameraException(
@@ -753,6 +767,7 @@ class CameraController extends ValueNotifier<CameraValue> {
     }
   }
 
+  /// Shutter speed (sensor exposure) => i64 value representing the sensor exposure time in nanoseconds (1s = 1e9ns)
   Future<void> setSensorExposure(int sensorExposure) async {
     if (!value.isInitialized || _isDisposed) {
       throw CameraException(
@@ -768,6 +783,7 @@ class CameraController extends ValueNotifier<CameraValue> {
     }
   }
 
+  /// White balance (color temparature) => int value
   Future<void> setWhiteBalanceGain(int whiteBalance) async {
     if (!value.isInitialized || _isDisposed) {
       throw CameraException(
