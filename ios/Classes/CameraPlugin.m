@@ -166,7 +166,7 @@ static ResolutionPreset getResolutionPresetForString(NSString *preset) {
 @property int flashMode;
 @property BOOL enableAutoExposure;
 @property BOOL autoFocusEnabled;
-@property float sensorSensitivity;
+@property(assign, nonatomic) NSNumber* iso;
 @property CMTime shutterSpeed;
 @property(nonatomic) FlutterEventChannel *eventChannel;
 @property(nonatomic) FLTImageStreamHandler *imageStreamHandler;
@@ -782,22 +782,26 @@ FourCharCode const videoFormat = kCVPixelFormatType_32BGRA;
         iso = _captureDevice.activeFormat.maxISO;
     }
     
-    sensorSensitivity = iso;
+    _iso = @(iso);
     [self updateExposureModeCustom];
 }
 
 // Shutter speed
 // https://developer.apple.com/documentation/avfoundation/avcapturedevice/1624646-setexposuremodecustomwithduratio?language=objc
 - (void)setSensorExposure:(float)speedNs {
-    CMTime time = CMTimeGetSeconds(speed / 1000000000); // Convert nanoseconds to seconds (1s = 1e9ns)
+    CMTime time = CMTimeMakeWithSeconds(speedNs / 1000000000, 1000000000); // Convert nanoseconds to seconds (1s = 1e9ns)
     
-    if (CMTIME_COMPARE_INLINE(time, <, _captureDevice.activeFormat.minExposureDuration)) {
+    float timeSeconds = CMTimeGetSeconds(time);
+    float min = CMTimeGetSeconds(_captureDevice.activeFormat.minExposureDuration);
+    float max = CMTimeGetSeconds(_captureDevice.activeFormat.maxExposureDuration);
+
+    if (timeSeconds < min) {
         time = _captureDevice.activeFormat.minExposureDuration;
-    } else if (CMTIME_COMPARE_INLINE(time, >, _captureDevice.activeFormat.maxExposureDuration)) {
+    } else if (timeSeconds > max) {
         time = _captureDevice.activeFormat.maxExposureDuration;
     }
     
-    shutterSpeed = time;
+    _shutterSpeed = time;
     [self updateExposureModeCustom];
 }
 
@@ -811,13 +815,13 @@ FourCharCode const videoFormat = kCVPixelFormatType_32BGRA;
         return;
     }
 
-    [_captureDevice setExposeMode:AVCaptureExposureModeCustom];
-    [_captureDevice setExposureModeCustomWithDuration:shutterSpeed == nil? AVCaptureExposureDurationCurrent : shutterSpeed ISO:iso == nil? AVCaptureISOCurrent : iso completionHandler:nil];
+    [_captureDevice setExposureMode:AVCaptureExposureModeCustom];
+    [_captureDevice setExposureModeCustomWithDuration:CMTIME_IS_VALID(_shutterSpeed) ? AVCaptureExposureDurationCurrent : _shutterSpeed ISO:_iso == nil? AVCaptureISOCurrent : [_iso floatValue] completionHandler:nil];
     
-    if (iso == nil) {
-        [_captureDevice setExposureModeCustomWithDuration:speed: ISO:AVCaptureISOCurrent completionHandler:nil];
+    if (_iso == nil) {
+        [_captureDevice setExposureModeCustomWithDuration:_shutterSpeed ISO:AVCaptureISOCurrent completionHandler:nil];
     } else {
-        [_captureDevice setExposureModeCustomWithDuration:shutterSpeed: ISO:iso completionHandler:nil];
+        [_captureDevice setExposureModeCustomWithDuration:_shutterSpeed ISO:[_iso floatValue] completionHandler:nil];
     }
     
     [_captureDevice unlockForConfiguration];
@@ -841,7 +845,7 @@ FourCharCode const videoFormat = kCVPixelFormatType_32BGRA;
     [_captureDevice unlockForConfiguration];
 }
 
-- (void)colorTemperature:(int)wb {
+- (AVCaptureWhiteBalanceGains)colorTemperature:(int)wb {
     float temperature = wb / 100;
     float red;
     float green;
@@ -853,27 +857,27 @@ FourCharCode const videoFormat = kCVPixelFormatType_32BGRA;
     else {
         red = temperature - 60;
         red = (float) (329.698727446 * (pow((double) red, -0.1332047592)));
-        if (red < 1)
-            red = 1;
-        if (red > _captureDevice.maxWhiteBalanceGain)
-            red = _captureDevice.maxWhiteBalanceGain;
+        if (red < 0)
+            red = 0;
+        if (red > 255)
+            red = 255;
     }
 
     //Calculate green
     if (temperature <= 66) {
         green = temperature;
         green = (float) (99.4708025861 * log(green) - 161.1195681661);
-        if (green < 1)
-            green = 1;
-        if (green > _captureDevice.maxWhiteBalanceGain)
+        if (green < 0)
+            green = 0;
+        if (green > 255)
             green = 255;
     } else {
         green = temperature - 60;
         green = (float) (288.1221695283 * (pow((double) green, -0.0755148492)));
-        if (green < 1)
-            green = 1;
-        if (green > _captureDevice.maxWhiteBalanceGain)
-            green = _captureDevice.maxWhiteBalanceGain;
+        if (green < 0)
+            green = 0;
+        if (green > 255)
+            green = 255;
     }
 
     //calculate blue
@@ -886,15 +890,18 @@ FourCharCode const videoFormat = kCVPixelFormatType_32BGRA;
         blue = (float) (138.5177312231 * log(blue) - 305.0447927307);
         if (blue < 0)
             blue = 0;
-        if (blue > _captureDevice.maxWhiteBalanceGain)
-            blue = _captureDevice.maxWhiteBalanceGain;
+        if (blue > 255)
+            blue = 255;
     }
     
+    red = red / 255 * 2;
+    green = green / 255;
+    blue = blue / 255 * 2;
     
     AVCaptureWhiteBalanceGains wbGains;
-    wbGains.redGain = red / 255 * 2;
-    wbGains.greenGain = green / 255;
-    wbGains.blueGain = blue / 255 * 2;
+    wbGains.redGain = red < 1 ? 1 : red > _captureDevice.maxWhiteBalanceGain ? _captureDevice.maxWhiteBalanceGain : red;
+    wbGains.greenGain = green < 1 ? 1 : green > _captureDevice.maxWhiteBalanceGain ? _captureDevice.maxWhiteBalanceGain : green;
+    wbGains.blueGain = blue < 1 ? 1 : blue > _captureDevice.maxWhiteBalanceGain ? _captureDevice.maxWhiteBalanceGain : blue;
     return wbGains;
 }
 
@@ -1129,26 +1136,26 @@ FourCharCode const videoFormat = kCVPixelFormatType_32BGRA;
       [_camera zoom:[step doubleValue]];
       result(nil);
   } else if ([@"supportSensorSensitivity" isEqualToString:call.method]) {
-      result(true); // no mention about support
+      result(@true); // no mention about support
   } else if ([@"supportLensAperture" isEqualToString:call.method]) {
-      result(false); // iOS dosen't support custom lens aperture
+      result(@false); // iOS dosen't support custom lens aperture
   } else if ([@"supportShutterSpeed" isEqualToString:call.method]) {
-      result(true); // no mention about support
+      result(@true); // no mention about support
   } else if ([@"supportWhiteBalance" isEqualToString:call.method]) {
-      result(true); // no mention about support
+      result(@true); // no mention about support
   } else if ([@"setSensorSensitivity" isEqualToString:call.method]) {
-      float sensitivity = call.arguments[@"sensorSensitivity"];
-      [_camera setSensorSensitivity:sensitivity];
+      NSNumber *sensitivity = call.arguments[@"sensorSensitivity"];
+      [_camera setSensorSensitivity:[sensitivity floatValue]];
   } else if ([@"setLensAperture" isEqualToString:call.method]) {
       // iOS does not support custom lens aperture
       result(nil);
   } else if ([@"setSensorExposure" isEqualToString:call.method]) {
-      float speed = call.arguments[@"sensorExposure"];
-      [_camera setSensorExposure:speed];
+      NSNumber *speed = call.arguments[@"sensorExposure"];
+      [_camera setSensorExposure:[speed floatValue]];
       result(nil);
   } else if ([@"setWhiteBalanceGain" isEqualToString:call.method]) {
-      int whiteBalance = call.arguments[@"whiteBalance"];
-      [_camera setWhiteBalance:whiteBalance];
+      NSNumber *whiteBalance = call.arguments[@"whiteBalance"];
+      [_camera setWhiteBalance:[whiteBalance intValue]];
       result(nil);
   } else {
     NSDictionary *argsMap = call.arguments;
