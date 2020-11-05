@@ -424,6 +424,7 @@ public class Camera {
             }
 
             if (whiteBalance != null) {
+                captureBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_OFF);
                 captureBuilder.set(CaptureRequest.COLOR_CORRECTION_MODE, CaptureRequest.COLOR_CORRECTION_MODE_TRANSFORM_MATRIX);
                 captureBuilder.set(CaptureRequest.COLOR_CORRECTION_GAINS, colorTemperature(whiteBalance));
             }
@@ -568,23 +569,23 @@ public class Camera {
         if (cameraCompatibility.isFlashSupported()) {
             switch (mFlash) {
                 case Constants.FLASH_OFF:
-                    mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON);
+                    // mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON);
                     mPreviewRequestBuilder.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_OFF);
                     break;
                 case Constants.FLASH_ON:
-                    mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON_ALWAYS_FLASH);
+                    // mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON_ALWAYS_FLASH);
                     mPreviewRequestBuilder.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_OFF);
                     break;
                 case Constants.FLASH_TORCH:
-                    mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON);
+                    // mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON);
                     mPreviewRequestBuilder.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_TORCH);
                     break;
                 case Constants.FLASH_AUTO:
-                    mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH);
+                    // mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH);
                     mPreviewRequestBuilder.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_OFF);
                     break;
                 case Constants.FLASH_RED_EYE:
-                    mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH_REDEYE);
+                    // mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH_REDEYE);
                     mPreviewRequestBuilder.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_OFF);
                     break;
             }
@@ -764,60 +765,87 @@ public class Camera {
                 null);
     }
 
-    public void setSensorSensitivity(int sensorSensitivity) {
-        this.sensorSensitivity = sensorSensitivity;
+    public void setSensorSensitivity(int sensorSensitivity) throws CameraAccessException {
+        Range<Integer> supportedRange = mCameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_SENSITIVITY_RANGE);
+        System.out.println(supportedRange);
+
+        if (supportedRange == null) {
+            return;
+        }
+
+        this.sensorSensitivity = supportedRange.clamp(sensorSensitivity);
 
         if (mPreviewRequestBuilder != null) {
             mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_OFF);
-            mPreviewRequestBuilder.set(CaptureRequest.SENSOR_SENSITIVITY, sensorSensitivity);
+            mPreviewRequestBuilder.set(CaptureRequest.SENSOR_SENSITIVITY, this.sensorSensitivity);
         }
 
-        if (!getCameraCompatibility().isSensorSensitivitySupported()) {
-            Log.d(TAG, "Sensor sensitivity (iso) not supported");
+        if (mCaptureSession != null) {
+            mCaptureSession.setRepeatingRequest(mPreviewRequestBuilder.build(), null, null);
         }
     }
 
-    public void setLensAperture(float lensAperture) {
-        this.lensAperture = lensAperture;
+    public void setLensAperture(float lensAperture) throws CameraAccessException {
+        float[] supportedApertures = mCameraCharacteristics.get(CameraCharacteristics.LENS_INFO_AVAILABLE_APERTURES);
+        if (supportedApertures == null || supportedApertures.length == 0) {
+            return;
+        }
+
+        float distance = Math.abs(supportedApertures[0] - lensAperture);
+        int index = 0;
+        for (int x = 0; x < supportedApertures.length; x++) {
+            float d = Math.abs(supportedApertures[x] - lensAperture);
+            if (d < distance) {
+                index = x;
+                distance = d;
+            }
+        }
+
+        this.lensAperture = supportedApertures[index];
 
         if (mPreviewRequestBuilder != null) {
             mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_OFF);
-            mPreviewRequestBuilder.set(CaptureRequest.LENS_APERTURE, lensAperture);
+            mPreviewRequestBuilder.set(CaptureRequest.LENS_APERTURE, this.lensAperture);
         }
 
-        if (!getCameraCompatibility().isLensApertureSupported()) {
-            Log.d(TAG, "Lens aperture not supported");
+        if (mCaptureSession != null) {
+            mCaptureSession.setRepeatingRequest(mPreviewRequestBuilder.build(), null, null);
         }
     }
 
-    public void setSensorExposure(long sensorExposure) {
-        this.sensorExposure = sensorExposure;
+    public void setSensorExposure(long sensorExposure) throws CameraAccessException {
+        Range<Long> supportedExposureTime = mCameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_EXPOSURE_TIME_RANGE);
+
+        this.sensorExposure = supportedExposureTime.clamp(sensorExposure);
 
         if (mPreviewRequestBuilder != null) {
             mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_OFF);
-            mPreviewRequestBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME, sensorExposure);
+            mPreviewRequestBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME, this.sensorExposure);
         }
 
-        if (!getCameraCompatibility().isShutterSpeedSupported()) {
-            Log.d(TAG, "Sensor exposure (shutter speed) not supported");
+        if (mCaptureSession != null) {
+            mCaptureSession.setRepeatingRequest(mPreviewRequestBuilder.build(), null, null);
         }
     }
 
-    public void setWhiteBalanceGain(int whiteBalance) {
+    public void setWhiteBalanceGain(int whiteBalance) throws CameraAccessException {
         this.whiteBalance = whiteBalance;
 
+        RggbChannelVector gains = colorTemperature(whiteBalance);
+
         if (mPreviewRequestBuilder != null) {
+            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_OFF);
             mPreviewRequestBuilder.set(CaptureRequest.COLOR_CORRECTION_MODE, CaptureRequest.COLOR_CORRECTION_MODE_TRANSFORM_MATRIX);
-            mPreviewRequestBuilder.set(CaptureRequest.COLOR_CORRECTION_GAINS, colorTemperature(whiteBalance));
+            mPreviewRequestBuilder.set(CaptureRequest.COLOR_CORRECTION_GAINS, gains);
         }
 
-        if (!getCameraCompatibility().isWhiteBalanceSupported()) {
-            Log.d(TAG, "White balance not supported");
+        if (mCaptureSession != null) {
+            mCaptureSession.setRepeatingRequest(mPreviewRequestBuilder.build(), null, null);
         }
     }
 
     // https://stackoverflow.com/a/35886771/11263383
-    public static RggbChannelVector colorTemperature(int whiteBalance) {
+    public RggbChannelVector colorTemperature(int whiteBalance) {
         float temperature = whiteBalance / 100f;
         float red;
         float green;

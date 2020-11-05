@@ -178,20 +178,37 @@ final class MethodCallHandlerImpl implements MethodChannel.MethodCallHandler {
                 result.success(camera.getCameraCompatibility().isWhiteBalanceSupported());
                 break;
             case "setSensorSensitivity":
-                camera.setSensorSensitivity(((Number) call.argument("sensorSensitivity")).intValue());
-                result.success(null);
+                try {
+                    camera.setSensorSensitivity(((Number) call.argument("sensorSensitivity")).intValue());
+                    result.success(null);
+                } catch (CameraAccessException e) {
+                    handleException(e, result);
+                }
                 break;
             case "setLensAperture":
-                camera.setLensAperture(((Number) call.argument("lensAperture")).floatValue());
+                try {
+                    camera.setLensAperture(((Number) call.argument("lensAperture")).floatValue());
+                    result.success(null);
+                } catch (CameraAccessException e) {
+                    handleException(e, result);
+                }
                 result.success(null);
                 break;
             case "setSensorExposure":
-                camera.setSensorExposure(((Number) call.argument("sensorExposure")).longValue());
-                result.success(null);
+                try {
+                    camera.setSensorExposure(((Number) call.argument("sensorExposure")).longValue());
+                    result.success(null);
+                } catch (CameraAccessException e) {
+                    handleException(e, result);
+                }
                 break;
             case "setWhiteBalanceGain":
-                camera.setWhiteBalanceGain(((Number) call.argument("whiteBalance")).intValue());
-                result.success(null);
+                try {
+                    camera.setWhiteBalanceGain(((Number) call.argument("whiteBalance")).intValue());
+                    result.success(null);
+                } catch (CameraAccessException e) {
+                    handleException(e, result);
+                }
                 break;
             case "dispose": {
                 if (camera != null) {

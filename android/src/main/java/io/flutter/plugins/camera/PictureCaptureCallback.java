@@ -56,7 +56,7 @@ public abstract class PictureCaptureCallback
                 if (af == CaptureResult.CONTROL_AF_STATE_FOCUSED_LOCKED ||
                         af == CaptureResult.CONTROL_AF_STATE_NOT_FOCUSED_LOCKED) {
                     Integer ae = result.get(CaptureResult.CONTROL_AE_STATE);
-                    if (ae == null || ae == CaptureResult.CONTROL_AE_STATE_CONVERGED) {
+                    if (ae == null || ae == CaptureResult.CONTROL_AE_STATE_CONVERGED || ae == CaptureRequest.CONTROL_AE_STATE_INACTIVE) {
                         setState(STATE_CAPTURING);
                         onReady();
                     } else {
