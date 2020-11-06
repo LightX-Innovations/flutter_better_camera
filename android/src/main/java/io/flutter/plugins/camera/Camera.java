@@ -766,7 +766,6 @@ public class Camera {
 
     public void setSensorSensitivity(int sensorSensitivity) throws CameraAccessException {
         Range<Integer> supportedRange = mCameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_SENSITIVITY_RANGE);
-        System.out.println(supportedRange);
 
         if (supportedRange == null) {
             return;
