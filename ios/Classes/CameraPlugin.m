@@ -1024,6 +1024,23 @@ FourCharCode const videoFormat = kCVPixelFormatType_32BGRA;
   return self;
 }
 
+- (CMVideoDimensions)getSensorSize:(AVCaptureDevice*)device {
+    CMVideoDimensions highest;
+    highest.width = 0;
+    highest.height = 0;
+
+    NSArray<AVCaptureDeviceFormat *> *formats = device.formats;
+    for (AVCaptureDeviceFormat *format in formats) {
+        CMVideoDimensions dim = CMVideoFormatDescriptionGetDimensions(format.formatDescription);
+
+        if (dim.width * dim.height > highest.width * highest.height) {
+            highest.width = dim.width;
+            highest.height = dim.height;
+        }
+    }
+    return highest;
+}
+
 - (void)handleMethodCall:(FlutterMethodCall *)call result:(FlutterResult)result {
   if (_dispatchQueue == nil) {
     _dispatchQueue = dispatch_queue_create("io.flutter.camera.dispatchqueue", NULL);
@@ -1057,10 +1074,15 @@ FourCharCode const videoFormat = kCVPixelFormatType_32BGRA;
           lensFacing = @"external";
           break;
       }
+
+      CMVideoDimensions dim = [self getSensorSize:device];
+
       [reply addObject:@{
         @"name" : [device uniqueID],
         @"lensFacing" : lensFacing,
         @"sensorOrientation" : @90,
+        @"sensorArraySizeWidth": [NSNumber numberWithInt:dim.width],
+        @"sensorArraySizeHeight": [NSNumber numberWithInt:dim.height]
       }];
     }
     result(reply);
