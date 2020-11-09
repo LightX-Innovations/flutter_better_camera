@@ -98,6 +98,10 @@ Future<List<CameraDescription>> availableCameras() async {
         name: camera['name'],
         lensDirection: _parseCameraLensDirection(camera['lensFacing']),
         sensorOrientation: camera['sensorOrientation'],
+        sensorSize: Size(
+          (camera['sensorArraySizeWidth'] as int).toDouble(),
+          (camera['sensorArraySizeHeight'] as int).toDouble(),
+        ),
       );
     }).toList();
   } on PlatformException catch (e) {
@@ -106,7 +110,7 @@ Future<List<CameraDescription>> availableCameras() async {
 }
 
 class CameraDescription {
-  CameraDescription({this.name, this.lensDirection, this.sensorOrientation});
+  CameraDescription({this.name, this.lensDirection, this.sensorOrientation, this.sensorSize});
 
   final String name;
   final CameraLensDirection lensDirection;
@@ -120,19 +124,22 @@ class CameraDescription {
   /// is from top to bottom in the sensor's coordinate system.
   final int sensorOrientation;
 
+  /// Sensor size in pixels
+  final Size sensorSize;
+
   @override
   bool operator ==(Object o) {
-    return o is CameraDescription && o.name == name && o.lensDirection == lensDirection;
+    return o is CameraDescription && o.name == name && o.lensDirection == lensDirection && o.sensorSize == sensorSize;
   }
 
   @override
   int get hashCode {
-    return hashValues(name, lensDirection);
+    return hashValues(name, lensDirection, sensorSize);
   }
 
   @override
   String toString() {
-    return '$runtimeType($name, $lensDirection, $sensorOrientation)';
+    return '$runtimeType($name, $lensDirection, $sensorOrientation, $sensorSize)';
   }
 }
 

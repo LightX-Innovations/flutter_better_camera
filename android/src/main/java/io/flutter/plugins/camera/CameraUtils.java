@@ -3,13 +3,18 @@ package io.flutter.plugins.camera;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.ImageFormat;
+import android.graphics.Rect;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.CamcorderProfile;
+import android.os.Build;
 import android.util.Size;
+
+import androidx.annotation.RequiresApi;
+
 import io.flutter.plugins.camera.Camera.ResolutionPreset;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -41,6 +46,7 @@ public final class CameraUtils {
         new CompareSizesByArea());
   }
 
+  @RequiresApi(api = Build.VERSION_CODES.M)
   public static List<Map<String, Object>> getAvailableCameras(Activity activity)
       throws CameraAccessException {
     CameraManager cameraManager = (CameraManager) activity.getSystemService(Context.CAMERA_SERVICE);
@@ -52,6 +58,9 @@ public final class CameraUtils {
       details.put("name", cameraName);
       int sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
       details.put("sensorOrientation", sensorOrientation);
+      Rect sensorArraySize = characteristics.get(CameraCharacteristics.SENSOR_INFO_PRE_CORRECTION_ACTIVE_ARRAY_SIZE);
+      details.put("sensorArraySizeHeight", sensorArraySize.height());
+      details.put("sensorArraySizeWidth", sensorArraySize.width());
 
       int lensFacing = characteristics.get(CameraCharacteristics.LENS_FACING);
       switch (lensFacing) {
