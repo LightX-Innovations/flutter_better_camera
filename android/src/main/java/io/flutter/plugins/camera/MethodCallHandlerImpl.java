@@ -192,7 +192,6 @@ final class MethodCallHandlerImpl implements MethodChannel.MethodCallHandler {
                 } catch (CameraAccessException e) {
                     handleException(e, result);
                 }
-                result.success(null);
                 break;
             case "setSensorExposure":
                 try {
