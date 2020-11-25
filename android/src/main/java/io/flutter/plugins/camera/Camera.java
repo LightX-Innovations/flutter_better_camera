@@ -480,6 +480,26 @@ public class Camera {
         // Create a new capture builder.
         mPreviewRequestBuilder = cameraDevice.createCaptureRequest(templateType);
 
+        if (sensorSensitivity != null || lensAperture != null || sensorExposure != null) {
+            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_OFF);
+
+            if (sensorSensitivity != null) {
+                mPreviewRequestBuilder.set(CaptureRequest.SENSOR_SENSITIVITY, sensorSensitivity);
+            }
+            if (lensAperture != null) {
+                mPreviewRequestBuilder.set(CaptureRequest.LENS_APERTURE, lensAperture);
+            }
+            if (sensorExposure != null) {
+                mPreviewRequestBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME, sensorExposure);
+            }
+        }
+
+        if (whiteBalance != null) {
+            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_OFF);
+            mPreviewRequestBuilder.set(CaptureRequest.COLOR_CORRECTION_MODE, CaptureRequest.COLOR_CORRECTION_MODE_TRANSFORM_MATRIX);
+            mPreviewRequestBuilder.set(CaptureRequest.COLOR_CORRECTION_GAINS, colorTemperature(whiteBalance));
+        }
+
         // Build Flutter surface to render to
         SurfaceTexture surfaceTexture = flutterTexture.surfaceTexture();
         surfaceTexture.setDefaultBufferSize(previewSize.getWidth(), previewSize.getHeight());
