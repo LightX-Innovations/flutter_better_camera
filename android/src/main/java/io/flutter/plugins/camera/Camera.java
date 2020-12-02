@@ -421,12 +421,16 @@ public class Camera {
                 if (sensorExposure != null) {
                     captureBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME, sensorExposure);
                 }
+            } else {
+                captureBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON);
             }
 
             if (whiteBalance != null) {
                 captureBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_OFF);
                 captureBuilder.set(CaptureRequest.COLOR_CORRECTION_MODE, CaptureRequest.COLOR_CORRECTION_MODE_TRANSFORM_MATRIX);
                 captureBuilder.set(CaptureRequest.COLOR_CORRECTION_GAINS, colorTemperature(whiteBalance));
+            } else {
+                captureBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_AUTO);
             }
 
             captureBuilder.set(CaptureRequest.JPEG_ORIENTATION, getMediaOrientation());
@@ -492,12 +496,16 @@ public class Camera {
             if (sensorExposure != null) {
                 mPreviewRequestBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME, sensorExposure);
             }
+        } else {
+            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON);
         }
 
         if (whiteBalance != null) {
             mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_OFF);
             mPreviewRequestBuilder.set(CaptureRequest.COLOR_CORRECTION_MODE, CaptureRequest.COLOR_CORRECTION_MODE_TRANSFORM_MATRIX);
             mPreviewRequestBuilder.set(CaptureRequest.COLOR_CORRECTION_GAINS, colorTemperature(whiteBalance));
+        } else {
+            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_AUTO);
         }
 
         // Build Flutter surface to render to
@@ -784,46 +792,63 @@ public class Camera {
                 null);
     }
 
-    public void setSensorSensitivity(int sensorSensitivity) throws CameraAccessException {
-        Range<Integer> supportedRange = mCameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_SENSITIVITY_RANGE);
+    public void setSensorSensitivity(Integer sensorSensitivity) throws CameraAccessException {
+        if (sensorSensitivity == null) {
+            this.sensorSensitivity = null;
 
-        if (supportedRange == null) {
-            return;
-        }
+            if (mPreviewRequestBuilder != null && this.sensorExposure == null && this.lensAperture == null) {
+                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON);
+            }
+        } else {
+            Range<Integer> supportedRange = mCameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_SENSITIVITY_RANGE);
 
-        this.sensorSensitivity = supportedRange.clamp(sensorSensitivity);
+            if (supportedRange == null) {
+                return;
+            }
 
-        if (mPreviewRequestBuilder != null) {
-            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_OFF);
-            mPreviewRequestBuilder.set(CaptureRequest.SENSOR_SENSITIVITY, this.sensorSensitivity);
-        }
+            this.sensorSensitivity = supportedRange.clamp(sensorSensitivity);
 
-        if (mCaptureSession != null) {
-            mCaptureSession.setRepeatingRequest(mPreviewRequestBuilder.build(), null, null);
-        }
-    }
-
-    public void setLensAperture(float lensAperture) throws CameraAccessException {
-        float[] supportedApertures = mCameraCharacteristics.get(CameraCharacteristics.LENS_INFO_AVAILABLE_APERTURES);
-        if (supportedApertures == null || supportedApertures.length == 0) {
-            return;
-        }
-
-        float distance = Math.abs(supportedApertures[0] - lensAperture);
-        int index = 0;
-        for (int x = 0; x < supportedApertures.length; x++) {
-            float d = Math.abs(supportedApertures[x] - lensAperture);
-            if (d < distance) {
-                index = x;
-                distance = d;
+            if (mPreviewRequestBuilder != null) {
+                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_OFF);
+                mPreviewRequestBuilder.set(CaptureRequest.SENSOR_SENSITIVITY, this.sensorSensitivity);
             }
         }
 
-        this.lensAperture = supportedApertures[index];
+        if (mCaptureSession != null) {
+            mCaptureSession.setRepeatingRequest(mPreviewRequestBuilder.build(), null, null);
+        }
+    }
 
-        if (mPreviewRequestBuilder != null) {
-            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_OFF);
-            mPreviewRequestBuilder.set(CaptureRequest.LENS_APERTURE, this.lensAperture);
+    public void setLensAperture(Float lensAperture) throws CameraAccessException {
+        if (lensAperture == null) {
+            this.lensAperture = null;
+
+            if (mPreviewRequestBuilder != null && this.sensorSensitivity == null && this.sensorExposure == null) {
+                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON);
+
+            }
+        } else {
+            float[] supportedApertures = mCameraCharacteristics.get(CameraCharacteristics.LENS_INFO_AVAILABLE_APERTURES);
+            if (supportedApertures == null || supportedApertures.length == 0) {
+                return;
+            }
+
+            float distance = Math.abs(supportedApertures[0] - lensAperture);
+            int index = 0;
+            for (int x = 0; x < supportedApertures.length; x++) {
+                float d = Math.abs(supportedApertures[x] - lensAperture);
+                if (d < distance) {
+                    index = x;
+                    distance = d;
+                }
+            }
+
+            this.lensAperture = supportedApertures[index];
+
+            if (mPreviewRequestBuilder != null) {
+                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_OFF);
+                mPreviewRequestBuilder.set(CaptureRequest.LENS_APERTURE, this.lensAperture);
+            }
         }
 
         if (mCaptureSession != null) {
@@ -831,14 +856,22 @@ public class Camera {
         }
     }
 
-    public void setSensorExposure(long sensorExposure) throws CameraAccessException {
-        Range<Long> supportedExposureTime = mCameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_EXPOSURE_TIME_RANGE);
+    public void setSensorExposure(Long sensorExposure) throws CameraAccessException {
+        if (sensorExposure == null) {
+            this.sensorExposure = null;
 
-        this.sensorExposure = supportedExposureTime.clamp(sensorExposure);
+            if (mPreviewRequestBuilder != null && this.sensorSensitivity == null && this.lensAperture == null) {
+                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON);
+            }
+        } else {
+            Range<Long> supportedExposureTime = mCameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_EXPOSURE_TIME_RANGE);
 
-        if (mPreviewRequestBuilder != null) {
-            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_OFF);
-            mPreviewRequestBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME, this.sensorExposure);
+            this.sensorExposure = supportedExposureTime.clamp(sensorExposure);
+
+            if (mPreviewRequestBuilder != null) {
+                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_OFF);
+                mPreviewRequestBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME, this.sensorExposure);
+            }
         }
 
         if (mCaptureSession != null) {
@@ -846,15 +879,20 @@ public class Camera {
         }
     }
 
-    public void setWhiteBalanceGain(int whiteBalance) throws CameraAccessException {
+    public void setWhiteBalanceGain(Integer whiteBalance) throws CameraAccessException {
         this.whiteBalance = whiteBalance;
+        if (whiteBalance == null) {
+            if (mPreviewRequestBuilder != null) {
+                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_AUTO);
+            }
+        } else {
+            RggbChannelVector gains = colorTemperature(whiteBalance);
 
-        RggbChannelVector gains = colorTemperature(whiteBalance);
-
-        if (mPreviewRequestBuilder != null) {
-            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_OFF);
-            mPreviewRequestBuilder.set(CaptureRequest.COLOR_CORRECTION_MODE, CaptureRequest.COLOR_CORRECTION_MODE_TRANSFORM_MATRIX);
-            mPreviewRequestBuilder.set(CaptureRequest.COLOR_CORRECTION_GAINS, gains);
+            if (mPreviewRequestBuilder != null) {
+                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_OFF);
+                mPreviewRequestBuilder.set(CaptureRequest.COLOR_CORRECTION_MODE, CaptureRequest.COLOR_CORRECTION_MODE_TRANSFORM_MATRIX);
+                mPreviewRequestBuilder.set(CaptureRequest.COLOR_CORRECTION_GAINS, gains);
+            }
         }
 
         if (mCaptureSession != null) {
@@ -909,7 +947,6 @@ public class Camera {
                 blue = 255;
         }
 
-        Log.v(TAG, "red=" + red + ", green=" + green + ", blue=" + blue);
         return new RggbChannelVector((red / 255) * 2, (green / 255), (green / 255), (blue / 255) * 2);
     }
 

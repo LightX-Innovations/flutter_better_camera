@@ -177,6 +177,10 @@ class CameraValue {
     this.isStreamingImages,
     this.autoFocusEnabled,
     this.flashMode,
+    this.lastSensorSensitivity,
+    this.lastLensAperture,
+    this.lastSensorExposure,
+    this.lastWhiteBalance,
     bool isRecordingPaused,
   }) : _isRecordingPaused = isRecordingPaused;
 
@@ -227,16 +231,33 @@ class CameraValue {
 
   bool get hasError => errorDescription != null;
 
-  CameraValue copyWith(
-      {bool isInitialized,
-      bool isRecordingVideo,
-      bool isTakingPicture,
-      bool isStreamingImages,
-      String errorDescription,
-      Size previewSize,
-      bool isRecordingPaused,
-      bool autoFocusEnabled,
-      FlashMode flashMode}) {
+  /// Last value set using [setSensorSensitivity]
+  final int lastSensorSensitivity;
+
+  /// Last value set using [setLensAperture]
+  final double lastLensAperture;
+
+  /// Last value set using [setSensorExposure]
+  final int lastSensorExposure;
+
+  /// Last value set using [setWhiteBalanceGain]
+  final int lastWhiteBalance;
+
+  CameraValue copyWith({
+    bool isInitialized,
+    bool isRecordingVideo,
+    bool isTakingPicture,
+    bool isStreamingImages,
+    String errorDescription,
+    Size previewSize,
+    bool isRecordingPaused,
+    bool autoFocusEnabled,
+    FlashMode flashMode,
+    int lastSensorSensitivity,
+    double lastLensAperture,
+    int lastSensorExposure,
+    int lastWhiteBalance,
+  }) {
     return CameraValue(
       isInitialized: isInitialized ?? this.isInitialized,
       errorDescription: errorDescription,
@@ -247,6 +268,10 @@ class CameraValue {
       isRecordingPaused: isRecordingPaused ?? _isRecordingPaused,
       autoFocusEnabled: autoFocusEnabled ?? this.autoFocusEnabled,
       flashMode: flashMode ?? this.flashMode,
+      lastSensorSensitivity: lastSensorSensitivity ?? this.lastSensorSensitivity,
+      lastLensAperture: lastLensAperture ?? this.lastLensAperture,
+      lastSensorExposure: lastSensorExposure ?? this.lastSensorExposure,
+      lastWhiteBalance: lastWhiteBalance ?? this.lastWhiteBalance,
     );
   }
 
@@ -753,6 +778,7 @@ class CameraController extends ValueNotifier<CameraValue> {
 
     try {
       await _channel.invokeMethod('setSensorSensitivity', <String, dynamic>{'sensorSensitivity': sensitivity});
+      value = value.copyWith(lastSensorSensitivity: sensitivity);
     } on PlatformException catch (e) {
       throw CameraException(e.code, e.message);
     }
@@ -769,6 +795,7 @@ class CameraController extends ValueNotifier<CameraValue> {
 
     try {
       await _channel.invokeMethod('setLensAperture', <String, dynamic>{'lensAperture': lensAperture});
+      value = value.copyWith(lastLensAperture: lensAperture);
     } on PlatformException catch (e) {
       throw CameraException(e.code, e.message);
     }
@@ -785,6 +812,7 @@ class CameraController extends ValueNotifier<CameraValue> {
 
     try {
       await _channel.invokeMethod('setSensorExposure', <String, dynamic>{'sensorExposure': sensorExposure});
+      value = value.copyWith(lastSensorExposure: sensorExposure);
     } on PlatformException catch (e) {
       throw CameraException(e.code, e.message);
     }
@@ -801,6 +829,7 @@ class CameraController extends ValueNotifier<CameraValue> {
 
     try {
       await _channel.invokeMethod('setWhiteBalanceGain', <String, dynamic>{'whiteBalance': whiteBalance});
+      value = value.copyWith(lastWhiteBalance: whiteBalance);
     } on PlatformException catch (e) {
       throw CameraException(e.code, e.message);
     }

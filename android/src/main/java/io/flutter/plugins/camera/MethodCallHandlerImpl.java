@@ -179,7 +179,8 @@ final class MethodCallHandlerImpl implements MethodChannel.MethodCallHandler {
                 break;
             case "setSensorSensitivity":
                 try {
-                    camera.setSensorSensitivity(((Number) call.argument("sensorSensitivity")).intValue());
+                    Object sensorSensitivity = call.argument("sensorSensitivity");
+                    camera.setSensorSensitivity(sensorSensitivity == null ? null : ((Number) sensorSensitivity).intValue());
                     result.success(null);
                 } catch (CameraAccessException e) {
                     handleException(e, result);
@@ -187,7 +188,8 @@ final class MethodCallHandlerImpl implements MethodChannel.MethodCallHandler {
                 break;
             case "setLensAperture":
                 try {
-                    camera.setLensAperture(((Number) call.argument("lensAperture")).floatValue());
+                    Object lensAperture = call.argument("lensAperture");
+                    camera.setLensAperture(lensAperture == null ? null : ((Number) lensAperture).floatValue());
                     result.success(null);
                 } catch (CameraAccessException e) {
                     handleException(e, result);
@@ -195,7 +197,8 @@ final class MethodCallHandlerImpl implements MethodChannel.MethodCallHandler {
                 break;
             case "setSensorExposure":
                 try {
-                    camera.setSensorExposure(((Number) call.argument("sensorExposure")).longValue());
+                    Object sensorExposure = call.argument("sensorExposure");
+                    camera.setSensorExposure(sensorExposure == null ? null : ((Number) sensorExposure).longValue());
                     result.success(null);
                 } catch (CameraAccessException e) {
                     handleException(e, result);
@@ -203,7 +206,8 @@ final class MethodCallHandlerImpl implements MethodChannel.MethodCallHandler {
                 break;
             case "setWhiteBalanceGain":
                 try {
-                    camera.setWhiteBalanceGain(((Number) call.argument("whiteBalance")).intValue());
+                    Object whiteBalance = call.argument("whiteBalance");
+                    camera.setWhiteBalanceGain(whiteBalance == null ? null : ((Number) whiteBalance).intValue());
                     result.success(null);
                 } catch (CameraAccessException e) {
                     handleException(e, result);
