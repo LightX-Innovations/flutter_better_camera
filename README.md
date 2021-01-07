@@ -21,7 +21,7 @@ https://pub.flutter-io.cn/packages/flutter_better_camera
 
 ## Installation
 
-Clone this repo and add it as a dependancy in your flutter pubspec.yaml
+Clone this repo and add it as a dependency in your flutter pubspec.yaml
 
 ### iOS
 Add two rows to the `ios/Runner/Info.plist`:

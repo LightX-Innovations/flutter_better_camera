@@ -54,13 +54,23 @@ public final class CameraUtils {
     List<Map<String, Object>> cameras = new ArrayList<>();
     for (String cameraName : cameraNames) {
       HashMap<String, Object> details = new HashMap<>();
+
       CameraCharacteristics characteristics = cameraManager.getCameraCharacteristics(cameraName);
       details.put("name", cameraName);
+
       int sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
       details.put("sensorOrientation", sensorOrientation);
-      Rect sensorArraySize = characteristics.get(CameraCharacteristics.SENSOR_INFO_PRE_CORRECTION_ACTIVE_ARRAY_SIZE);
-      details.put("sensorArraySizeHeight", sensorArraySize.height());
-      details.put("sensorArraySizeWidth", sensorArraySize.width());
+
+      int supportedLevel = characteristics.get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL);
+      if (supportedLevel == CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LEGACY) {
+        Size sensorArraySize = characteristics.get(CameraCharacteristics.SENSOR_INFO_PIXEL_ARRAY_SIZE);
+        details.put("sensorArraySizeHeight", sensorArraySize.getHeight());
+        details.put("sensorArraySizeWidth", sensorArraySize.getWidth());
+      } else {
+        Rect sensorArraySize = characteristics.get(CameraCharacteristics.SENSOR_INFO_PRE_CORRECTION_ACTIVE_ARRAY_SIZE);
+        details.put("sensorArraySizeHeight", sensorArraySize.height());
+        details.put("sensorArraySizeWidth", sensorArraySize.width());
+      }
 
       int lensFacing = characteristics.get(CameraCharacteristics.LENS_FACING);
       switch (lensFacing) {

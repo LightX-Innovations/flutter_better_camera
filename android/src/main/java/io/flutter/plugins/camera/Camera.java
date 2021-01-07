@@ -857,6 +857,11 @@ public class Camera {
     }
 
     public void setSensorExposure(Long sensorExposure) throws CameraAccessException {
+        int supportedLevel = mCameraCharacteristics.get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL);
+        if (supportedLevel == CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LEGACY) {
+            return;
+        }
+
         if (sensorExposure == null) {
             this.sensorExposure = null;
 
