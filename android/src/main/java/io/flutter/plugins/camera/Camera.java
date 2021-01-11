@@ -349,13 +349,14 @@ public class Camera {
         mCaptureCallback.setResult(result);
         Log.e(TAG, "takePicture");
 
-        if (mAutoFocus) {
-            Log.e(TAG, "takePicture-mAutoFocus");
-            lockFocus();
-        } else {
+        // TODO: Fix auto focus.
+//        if (mAutoFocus) {
+//            Log.e(TAG, "takePicture-mAutoFocus");
+//            lockFocus();
+//        } else {
             Log.e(TAG, "takePicture-noAutoFocus");
             captureStillPicture(filePath, result);
-        }
+//        }
     }
 
     // Meaning no auto focus
