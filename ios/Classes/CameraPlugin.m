@@ -161,9 +161,9 @@ static ResolutionPreset getResolutionPresetForString(NSString *preset) {
                               AVCaptureAudioDataOutputSampleBufferDelegate,
                               FlutterStreamHandler>
 @property(readonly, nonatomic) int64_t textureId;
-@property(nonatomic, copy) void (^onFrameAvailable)();
+@property(nonatomic, copy) void (^onFrameAvailable)(void);
 @property BOOL enableAudio;
-@property int flashMode;
+@property (nonatomic) int flashMode;
 @property BOOL enableAutoExposure;
 @property BOOL autoFocusEnabled;
 @property(assign, nonatomic) NSNumber *iso;
@@ -776,7 +776,7 @@ FourCharCode const videoFormat = kCVPixelFormatType_32BGRA;
 // ISO
 // https://developer.apple.com/documentation/avfoundation/avcapturedevice/1624646-setexposuremodecustomwithduratio?language=objc
 - (void)setSensorSensitivity:(NSNumber*)iso {
-    if (iso == nil || iso == [NSNull null] || isnan([iso intValue])) {
+    if (iso == nil || iso == (NSNumber*)[NSNull null] || isnan([iso intValue])) {
         _iso = nil;
     } else {
         if ([iso floatValue] < _captureDevice.activeFormat.minISO) {
@@ -794,7 +794,7 @@ FourCharCode const videoFormat = kCVPixelFormatType_32BGRA;
 // Shutter speed
 // https://developer.apple.com/documentation/avfoundation/avcapturedevice/1624646-setexposuremodecustomwithduratio?language=objc
 - (void)setSensorExposure:(NSNumber*)speedNs {
-    if (speedNs == nil || speedNs == [NSNull null] || isnan([speedNs floatValue])) {
+    if (speedNs == nil || speedNs == (NSNumber*)[NSNull null] || isnan([speedNs floatValue])) {
         _shutterSpeed = kCMTimeIndefinite;
     } else {
         CMTime time = CMTimeMakeWithSeconds([speedNs floatValue] / 1000000000, 1000000000); // Convert nanoseconds to seconds (1s = 1e9ns)
@@ -846,7 +846,7 @@ FourCharCode const videoFormat = kCVPixelFormatType_32BGRA;
         return;
     }
     
-    if (wb == nil || wb == [NSNull null]) {
+    if (wb == nil || wb == (NSNumber*)[NSNull null]) {
         [_captureDevice setWhiteBalanceMode:AVCaptureWhiteBalanceModeContinuousAutoWhiteBalance];
     } else {
         AVCaptureWhiteBalanceGains gains = [self colorTemperature:[wb intValue]];
@@ -936,7 +936,7 @@ FourCharCode const videoFormat = kCVPixelFormatType_32BGRA;
     return NO;
   }
   NSDictionary *videoSettings = [NSDictionary
-      dictionaryWithObjectsAndKeys:AVVideoCodecH264, AVVideoCodecKey,
+      dictionaryWithObjectsAndKeys:AVVideoCodecTypeJPEG, AVVideoCodecKey,
                                    [NSNumber numberWithInt:_previewSize.height], AVVideoWidthKey,
                                    [NSNumber numberWithInt:_previewSize.width], AVVideoHeightKey,
                                    nil];
@@ -1123,7 +1123,7 @@ FourCharCode const videoFormat = kCVPixelFormatType_32BGRA;
       int64_t textureId = [_registry registerTexture:cam];
       _camera = cam;
       cam.onFrameAvailable = ^{
-        [_registry textureFrameAvailable:textureId];
+          [self->_registry textureFrameAvailable:textureId];
       };
       FlutterEventChannel *eventChannel = [FlutterEventChannel
           eventChannelWithName:[NSString
