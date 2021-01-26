@@ -936,7 +936,7 @@ FourCharCode const videoFormat = kCVPixelFormatType_32BGRA;
     return NO;
   }
   NSDictionary *videoSettings = [NSDictionary
-      dictionaryWithObjectsAndKeys:AVVideoCodecJPEG, AVVideoCodecKey,
+      dictionaryWithObjectsAndKeys:AVVideoCodecTypeJPEG, AVVideoCodecKey,
                                    [NSNumber numberWithInt:_previewSize.height], AVVideoWidthKey,
                                    [NSNumber numberWithInt:_previewSize.width], AVVideoHeightKey,
                                    nil];
