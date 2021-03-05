@@ -69,18 +69,20 @@ static FlutterError *getFlutterError(NSError *error) {
                 previewPhotoSampleBuffer:(CMSampleBufferRef)previewPhotoSampleBuffer
                         resolvedSettings:(AVCaptureResolvedPhotoSettings *)resolvedSettings
                          bracketSettings:(AVCaptureBracketedStillImageSettings *)bracketSettings
-                                   error:(NSError *)error {
+                                   error:(NSError *)error API_AVAILABLE(ios(10)) {
   selfReference = nil;
   if (error) {
     _result(getFlutterError(error));
     return;
   }
+
   NSData *data = [AVCapturePhotoOutput
       JPEGPhotoDataRepresentationForJPEGSampleBuffer:photoSampleBuffer
                             previewPhotoSampleBuffer:previewPhotoSampleBuffer];
   UIImage *image = [UIImage imageWithCGImage:[UIImage imageWithData:data].CGImage
                                        scale:1.0
                                  orientation:[self getImageRotation]];
+
   // TODO(sigurdm): Consider writing file asynchronously.
   bool success = [UIImageJPEGRepresentation(image, 1.0) writeToFile:_path atomically:YES];
   if (!success) {
@@ -161,9 +163,9 @@ static ResolutionPreset getResolutionPresetForString(NSString *preset) {
                               AVCaptureAudioDataOutputSampleBufferDelegate,
                               FlutterStreamHandler>
 @property(readonly, nonatomic) int64_t textureId;
-@property(nonatomic, copy) void (^onFrameAvailable)();
+@property(nonatomic, copy) void (^onFrameAvailable)(void);
 @property BOOL enableAudio;
-@property int flashMode;
+@property (nonatomic) int flashMode;
 @property BOOL enableAutoExposure;
 @property BOOL autoFocusEnabled;
 @property(assign, nonatomic) NSNumber *iso;
@@ -221,7 +223,7 @@ static ResolutionPreset getResolutionPresetForString(NSString *preset) {
   dispatch_queue_t _dispatchQueue;
 }
 // Format used for video and image streaming.
-FourCharCode const videoFormat = kCVPixelFormatType_32BGRA;
+FourCharCode const videoFormat = kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange;
 
 - (instancetype)initWithCameraName:(NSString *)cameraName
                   resolutionPreset:(NSString *)resolutionPreset
@@ -230,7 +232,7 @@ FourCharCode const videoFormat = kCVPixelFormatType_32BGRA;
                     autoFocusEnabled:(int)autoFocusEnabled
                        enableAutoExposure:(BOOL)enableAutoExposure
                      dispatchQueue:(dispatch_queue_t)dispatchQueue
-                             error:(NSError **)error {
+                             error:(NSError **)error API_AVAILABLE(ios(10)) {
   self = [super init];
   NSAssert(self, @"super init cannot be nil");
   @try {
@@ -267,9 +269,11 @@ FourCharCode const videoFormat = kCVPixelFormatType_32BGRA;
   [_captureSession addInputWithNoConnections:_captureVideoInput];
   [_captureSession addOutputWithNoConnections:_captureVideoOutput];
   [_captureSession addConnection:connection];
+
   _capturePhotoOutput = [AVCapturePhotoOutput new];
   [_capturePhotoOutput setHighResolutionCaptureEnabled:YES];
   [_captureSession addOutput:_capturePhotoOutput];
+
   _motionManager = [[CMMotionManager alloc] init];
   [_motionManager startAccelerometerUpdates];
 
@@ -278,7 +282,7 @@ FourCharCode const videoFormat = kCVPixelFormatType_32BGRA;
   if (enableAutoExposure) {
     [self setAutoExposureMode:enableAutoExposure];
   }
- 
+
     if(autoFocusEnabled){
         [self setAutoFocus:autoFocusEnabled];
     }
@@ -295,20 +299,20 @@ FourCharCode const videoFormat = kCVPixelFormatType_32BGRA;
   [_captureSession stopRunning];
 }
 
-- (void)captureToFile:(NSString *)path result:(FlutterResult)result {
+- (void)captureToFile:(NSString *)path result:(FlutterResult)result API_AVAILABLE(ios(10)) {
   AVCapturePhotoSettings *settings = [AVCapturePhotoSettings photoSettings];
   if (_resolutionPreset == max) {
     [settings setHighResolutionPhotoEnabled:YES];
   }
 
-  if(_flashMode == 1){
+  if(_flashMode == 1) {
     [settings setFlashMode:AVCaptureFlashModeOn];
   } else if(_flashMode == 0) {
       [settings setFlashMode:AVCaptureFlashModeOff];
   } else if(_flashMode == 3) {
       [settings setFlashMode:AVCaptureFlashModeAuto];
   }
-    
+
   [_capturePhotoOutput
       capturePhotoWithSettings:settings
                       delegate:[[FLTSavePhotoDelegate alloc] initWithPath:path
@@ -319,20 +323,22 @@ FourCharCode const videoFormat = kCVPixelFormatType_32BGRA;
 
 - (void)setCaptureSessionPreset:(ResolutionPreset)resolutionPreset {
   switch (resolutionPreset) {
-    case max:
-      if ([_captureSession canSetSessionPreset:AVCaptureSessionPresetHigh]) {
-        _captureSession.sessionPreset = AVCaptureSessionPresetHigh;
-        _previewSize =
-            CGSizeMake(_captureDevice.activeFormat.highResolutionStillImageDimensions.width,
-                       _captureDevice.activeFormat.highResolutionStillImageDimensions.height);
-        break;
-      }
-    case ultraHigh:
-      if ([_captureSession canSetSessionPreset:AVCaptureSessionPreset3840x2160]) {
-        _captureSession.sessionPreset = AVCaptureSessionPreset3840x2160;
-        _previewSize = CGSizeMake(3840, 2160);
-        break;
-      }
+      case max:
+      case ultraHigh:
+        if (@available(iOS 9.0, *)) {
+          if ([_captureSession canSetSessionPreset:AVCaptureSessionPreset3840x2160]) {
+            _captureSession.sessionPreset = AVCaptureSessionPreset3840x2160;
+            _previewSize = CGSizeMake(3840, 2160);
+            break;
+          }
+        }
+        if ([_captureSession canSetSessionPreset:AVCaptureSessionPresetHigh]) {
+          _captureSession.sessionPreset = AVCaptureSessionPresetHigh;
+          _previewSize =
+              CGSizeMake(_captureDevice.activeFormat.highResolutionStillImageDimensions.width,
+                         _captureDevice.activeFormat.highResolutionStillImageDimensions.height);
+          break;
+        }
     case veryHigh:
       if ([_captureSession canSetSessionPreset:AVCaptureSessionPreset1920x1080]) {
         _captureSession.sessionPreset = AVCaptureSessionPreset1920x1080;
@@ -352,14 +358,9 @@ FourCharCode const videoFormat = kCVPixelFormatType_32BGRA;
         break;
       }
     case low:
+    default:
       if ([_captureSession canSetSessionPreset:AVCaptureSessionPreset352x288]) {
         _captureSession.sessionPreset = AVCaptureSessionPreset352x288;
-        _previewSize = CGSizeMake(352, 288);
-        break;
-      }
-    default:
-      if ([_captureSession canSetSessionPreset:AVCaptureSessionPresetLow]) {
-        _captureSession.sessionPreset = AVCaptureSessionPresetLow;
         _previewSize = CGSizeMake(352, 288);
       } else {
         NSError *error =
@@ -623,7 +624,7 @@ FourCharCode const videoFormat = kCVPixelFormatType_32BGRA;
   return nil;
 }
 
-- (void)startVideoRecordingAtPath:(NSString *)path result:(FlutterResult)result {
+- (void)startVideoRecordingAtPath:(NSString *)path result:(FlutterResult)result API_AVAILABLE(ios(11)) {
   if (!_isRecording) {
     if (![self setupWriterForPath:path]) {
       _eventSink(@{@"event" : @"error", @"errorDescription" : @"Setup Writer Failed"});
@@ -776,7 +777,7 @@ FourCharCode const videoFormat = kCVPixelFormatType_32BGRA;
 // ISO
 // https://developer.apple.com/documentation/avfoundation/avcapturedevice/1624646-setexposuremodecustomwithduratio?language=objc
 - (void)setSensorSensitivity:(NSNumber*)iso {
-    if (iso == nil || iso == [NSNull null] || isnan([iso intValue])) {
+    if (iso == nil || iso == (NSNumber*)[NSNull null] || isnan([iso intValue])) {
         _iso = nil;
     } else {
         if ([iso floatValue] < _captureDevice.activeFormat.minISO) {
@@ -787,18 +788,18 @@ FourCharCode const videoFormat = kCVPixelFormatType_32BGRA;
             _iso = iso;
         }
     }
-    
+
     [self updateExposureModeCustom];
 }
 
 // Shutter speed
 // https://developer.apple.com/documentation/avfoundation/avcapturedevice/1624646-setexposuremodecustomwithduratio?language=objc
 - (void)setSensorExposure:(NSNumber*)speedNs {
-    if (speedNs == nil || speedNs == [NSNull null] || isnan([speedNs floatValue])) {
+    if (speedNs == nil || speedNs == (NSNumber*)[NSNull null] || isnan([speedNs floatValue])) {
         _shutterSpeed = kCMTimeIndefinite;
     } else {
         CMTime time = CMTimeMakeWithSeconds([speedNs floatValue] / 1000000000, 1000000000); // Convert nanoseconds to seconds (1s = 1e9ns)
-        
+
         float timeSeconds = CMTimeGetSeconds(time);
         float min = CMTimeGetSeconds(_captureDevice.activeFormat.minExposureDuration);
         float max = CMTimeGetSeconds(_captureDevice.activeFormat.maxExposureDuration);
@@ -808,10 +809,10 @@ FourCharCode const videoFormat = kCVPixelFormatType_32BGRA;
         } else if (timeSeconds > max) {
             time = _captureDevice.activeFormat.maxExposureDuration;
         }
-        
+
         _shutterSpeed = time;
     }
-    
+
     [self updateExposureModeCustom];
 }
 
@@ -820,18 +821,18 @@ FourCharCode const videoFormat = kCVPixelFormatType_32BGRA;
     if (_captureDevice == nil || ![_captureDevice lockForConfiguration:&error]) {
         return;
     }
-    
+
     if ((_iso == nil || _iso == NULL) && (CMTIME_IS_INVALID(_shutterSpeed) || CMTIME_IS_INDEFINITE(_shutterSpeed))) {
         [_captureDevice setExposureMode:AVCaptureExposureModeContinuousAutoExposure];
     } else {
         [_captureDevice setExposureMode:AVCaptureExposureModeCustom];
-    
+
         [_captureDevice setExposureModeCustomWithDuration:CMTIME_IS_INVALID(_shutterSpeed) || CMTIME_IS_INDEFINITE(_shutterSpeed) ? AVCaptureExposureDurationCurrent : _shutterSpeed
                                                       ISO:_iso == nil || _iso == NULL ? AVCaptureISOCurrent : [_iso floatValue]
                                         completionHandler:nil
          ];
     }
-    
+
     [_captureDevice unlockForConfiguration];
 }
 
@@ -841,18 +842,18 @@ FourCharCode const videoFormat = kCVPixelFormatType_32BGRA;
     if (_captureDevice == nil) {
         return;
     }
-    
+
     if (![_captureDevice lockForConfiguration:&error]) {
         return;
     }
-    
-    if (wb == nil || wb == [NSNull null]) {
+
+    if (wb == nil || wb == (NSNumber*)[NSNull null]) {
         [_captureDevice setWhiteBalanceMode:AVCaptureWhiteBalanceModeContinuousAutoWhiteBalance];
     } else {
         AVCaptureWhiteBalanceGains gains = [self colorTemperature:[wb intValue]];
         [_captureDevice setWhiteBalanceModeLockedWithDeviceWhiteBalanceGains:gains completionHandler:nil];
     }
-    
+
     [_captureDevice unlockForConfiguration];
 }
 
@@ -904,11 +905,11 @@ FourCharCode const videoFormat = kCVPixelFormatType_32BGRA;
         if (blue > 255)
             blue = 255;
     }
-    
+
     red = red / 255 * 2;
     green = green / 255;
     blue = blue / 255 * 2;
-    
+
     AVCaptureWhiteBalanceGains wbGains;
     wbGains.redGain = red < 1 ? 1 : red > _captureDevice.maxWhiteBalanceGain ? _captureDevice.maxWhiteBalanceGain : red;
     wbGains.greenGain = green < 1 ? 1 : green > _captureDevice.maxWhiteBalanceGain ? _captureDevice.maxWhiteBalanceGain : green;
@@ -916,7 +917,7 @@ FourCharCode const videoFormat = kCVPixelFormatType_32BGRA;
     return wbGains;
 }
 
-- (BOOL)setupWriterForPath:(NSString *)path {
+- (BOOL)setupWriterForPath:(NSString *)path API_AVAILABLE(ios(11)) {
   NSError *error = nil;
   NSURL *outputURL;
   if (path != nil) {
@@ -928,7 +929,7 @@ FourCharCode const videoFormat = kCVPixelFormatType_32BGRA;
     [self setUpCaptureSessionForAudio];
   }
   _videoWriter = [[AVAssetWriter alloc] initWithURL:outputURL
-                                           fileType:AVFileTypeQuickTimeMovie
+                                           fileType:AVFileTypeMPEG4
                                               error:&error];
   NSParameterAssert(_videoWriter);
   if (error) {
@@ -936,7 +937,7 @@ FourCharCode const videoFormat = kCVPixelFormatType_32BGRA;
     return NO;
   }
   NSDictionary *videoSettings = [NSDictionary
-      dictionaryWithObjectsAndKeys:AVVideoCodecH264, AVVideoCodecKey,
+      dictionaryWithObjectsAndKeys:AVVideoCodecTypeH264, AVVideoCodecKey,
                                    [NSNumber numberWithInt:_previewSize.height], AVVideoWidthKey,
                                    [NSNumber numberWithInt:_previewSize.width], AVVideoHeightKey,
                                    nil];
@@ -1052,18 +1053,18 @@ FourCharCode const videoFormat = kCVPixelFormatType_32BGRA;
     return highest;
 }
 
-- (void)handleMethodCall:(FlutterMethodCall *)call result:(FlutterResult)result {
+- (void)handleMethodCall:(FlutterMethodCall *)call result:(FlutterResult)result API_AVAILABLE(ios(10)) {
   if (_dispatchQueue == nil) {
     _dispatchQueue = dispatch_queue_create("io.flutter.camera.dispatchqueue", NULL);
   }
-	
+
   // Invoke the plugin on another dispatch queue to avoid blocking the UI.
   dispatch_async(_dispatchQueue, ^{
     [self handleMethodCallAsync:call result:result];
   });
 }
 
-- (void)handleMethodCallAsync:(FlutterMethodCall *)call result:(FlutterResult)result {
+- (void)handleMethodCallAsync:(FlutterMethodCall *)call result:(FlutterResult)result API_AVAILABLE(ios(10)) {
   if ([@"availableCameras" isEqualToString:call.method]) {
     AVCaptureDeviceDiscoverySession *discoverySession = [AVCaptureDeviceDiscoverySession
         discoverySessionWithDeviceTypes:@[ AVCaptureDeviceTypeBuiltInWideAngleCamera ]
@@ -1123,7 +1124,7 @@ FourCharCode const videoFormat = kCVPixelFormatType_32BGRA;
       int64_t textureId = [_registry registerTexture:cam];
       _camera = cam;
       cam.onFrameAvailable = ^{
-        [_registry textureFrameAvailable:textureId];
+          [self->_registry textureFrameAvailable:textureId];
       };
       FlutterEventChannel *eventChannel = [FlutterEventChannel
           eventChannelWithName:[NSString
