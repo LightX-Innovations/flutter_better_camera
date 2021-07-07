@@ -1,3 +1,12 @@
+## 1.0.2
+iPad specific bugfix for devices that do not have flash.
+
+## 1.0.1
+Fixed an issue with devices that do not have flash, thanks to [roxifas](https://github.com/roxifas) ❤️
+
+## 1.0.0
+Null safety support.
+
 ## 0.6.0
 Add flash, auto exposure, zoom and auto focus support for IOS and Android
 

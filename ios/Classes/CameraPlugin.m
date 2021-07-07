@@ -305,14 +305,19 @@ FourCharCode const videoFormat = kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange
     [settings setHighResolutionPhotoEnabled:YES];
   }
 
-  if(_flashMode == 1) {
-    [settings setFlashMode:AVCaptureFlashModeOn];
-  } else if(_flashMode == 0) {
-      [settings setFlashMode:AVCaptureFlashModeOff];
-  } else if(_flashMode == 3) {
-      [settings setFlashMode:AVCaptureFlashModeAuto];
-  }
 
+  if (_captureDevice.hasFlash) {
+    if(_flashMode == 1) {
+      [settings setFlashMode:AVCaptureFlashModeOn];
+    } else if(_flashMode == 0) {
+      [settings setFlashMode:AVCaptureFlashModeOff];
+    } else if(_flashMode == 3) {
+      [settings setFlashMode:AVCaptureFlashModeAuto];
+    }
+  } else {
+    [settings setFlashMode:AVCaptureFlashModeOff];
+  }
+    
   [_capturePhotoOutput
       capturePhotoWithSettings:settings
                       delegate:[[FLTSavePhotoDelegate alloc] initWithPath:path
@@ -702,15 +707,18 @@ FourCharCode const videoFormat = kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange
   }
 }
 - (bool)hasFlash {
-  AVCaptureDevice *device = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
-  return ([device hasFlash] && [device hasFlash]);
+  return [_captureDevice hasFlash];
 }
 - (void)setFlashMode:(int)flashMode {
-  [self setFlashMode:flashMode level:1.0];
+  if (!_captureDevice.hasFlash) {
+    [self setFlashMode: AVCaptureFlashModeOff];
+  } else {
+    [self setFlashMode:flashMode level:1.0];
+  }
 }
 
 - (void)setFlashMode:(int)flashMode level:(float)level {
-    _flashMode = flashMode;
+  _flashMode = flashMode;
 }
 
 - (void)setAutoExposureMode:(BOOL)enable {
