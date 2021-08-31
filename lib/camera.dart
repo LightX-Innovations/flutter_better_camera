@@ -75,7 +75,7 @@ String serializeResolutionPreset(ResolutionPreset resolutionPreset) {
   }
 }
 
-CameraLensDirection _parseCameraLensDirection(String? string) {
+CameraLensDirection _parseCameraLensDirection(String string) {
   switch (string) {
     case 'front':
       return CameraLensDirection.front;
@@ -92,9 +92,8 @@ CameraLensDirection _parseCameraLensDirection(String? string) {
 /// May throw a [CameraException].
 Future<List<CameraDescription>> availableCameras() async {
   try {
-    final List<Map<dynamic, dynamic>> cameras = (await _channel
-            .invokeListMethod<Map<dynamic, dynamic>>('availableCameras'))
-        as List<Map<dynamic, dynamic>>;
+    final List<Map<dynamic, dynamic>> cameras =
+        (await _channel.invokeListMethod<Map<dynamic, dynamic>>('availableCameras')) as List<Map<dynamic, dynamic>>;
     return cameras.map((Map<dynamic, dynamic> camera) {
       return CameraDescription(
         name: camera['name'],
@@ -112,8 +111,7 @@ Future<List<CameraDescription>> availableCameras() async {
 }
 
 class CameraDescription {
-  CameraDescription(
-      {this.name, this.lensDirection, this.sensorOrientation, this.sensorSize});
+  CameraDescription({this.name, this.lensDirection, this.sensorOrientation, this.sensorSize});
 
   final String? name;
   final CameraLensDirection? lensDirection;
@@ -132,10 +130,7 @@ class CameraDescription {
 
   @override
   bool operator ==(Object o) {
-    return o is CameraDescription &&
-        o.name == name &&
-        o.lensDirection == lensDirection &&
-        o.sensorSize == sensorSize;
+    return o is CameraDescription && o.name == name && o.lensDirection == lensDirection && o.sensorSize == sensorSize;
   }
 
   @override
@@ -168,9 +163,7 @@ class CameraPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return controller.value.isInitialized!
-        ? Texture(textureId: controller._textureId!)
-        : Container();
+    return controller.value.isInitialized! ? Texture(textureId: controller._textureId!) : Container();
   }
 }
 
@@ -185,10 +178,10 @@ class CameraValue {
     this.isStreamingImages,
     this.autoFocusEnabled,
     this.flashMode,
-    this.lastSensorSensitivity,
-    this.lastLensAperture,
-    this.lastSensorExposure,
-    this.lastWhiteBalance,
+    this.sensorSensitivity,
+    this.lensAperture,
+    this.sensorExposure,
+    this.whiteBalance,
     bool? isRecordingPaused,
   }) : _isRecordingPaused = isRecordingPaused;
 
@@ -241,16 +234,16 @@ class CameraValue {
   bool get hasError => errorDescription != null;
 
   /// Last value set using [setSensorSensitivity]
-  final int? lastSensorSensitivity;
+  final int? sensorSensitivity;
 
   /// Last value set using [setLensAperture]
-  final double? lastLensAperture;
+  final double? lensAperture;
 
   /// Last value set using [setSensorExposure]
-  final int? lastSensorExposure;
+  final int? sensorExposure;
 
   /// Last value set using [setWhiteBalanceGain]
-  final int? lastWhiteBalance;
+  final int? whiteBalance;
 
   CameraValue copyWith({
     bool? isInitialized,
@@ -262,10 +255,10 @@ class CameraValue {
     bool? isRecordingPaused,
     bool? autoFocusEnabled,
     FlashMode? flashMode,
-    int? lastSensorSensitivity,
-    double? lastLensAperture,
-    int? lastSensorExposure,
-    int? lastWhiteBalance,
+    int? sensorSensitivity,
+    double? lensAperture,
+    int? sensorExposure,
+    int? whiteBalance,
   }) {
     return CameraValue(
       isInitialized: isInitialized ?? this.isInitialized,
@@ -277,11 +270,64 @@ class CameraValue {
       isRecordingPaused: isRecordingPaused ?? _isRecordingPaused,
       autoFocusEnabled: autoFocusEnabled ?? this.autoFocusEnabled,
       flashMode: flashMode ?? this.flashMode,
-      lastSensorSensitivity:
-          lastSensorSensitivity ?? this.lastSensorSensitivity,
-      lastLensAperture: lastLensAperture ?? this.lastLensAperture,
-      lastSensorExposure: lastSensorExposure ?? this.lastSensorExposure,
-      lastWhiteBalance: lastWhiteBalance ?? this.lastWhiteBalance,
+      sensorSensitivity: sensorSensitivity ?? this.sensorSensitivity,
+      lensAperture: lensAperture ?? this.lensAperture,
+      sensorExposure: sensorExposure ?? this.sensorExposure,
+      whiteBalance: whiteBalance ?? this.whiteBalance,
+    );
+  }
+
+  CameraValue copyWithSensorSensitivity(int? sensorSensitivity) {
+    return CameraValue(
+      isInitialized: isInitialized,
+      errorDescription: errorDescription,
+      previewSize: previewSize,
+      isRecordingVideo: isRecordingVideo,
+      isTakingPicture: isTakingPicture,
+      isStreamingImages: isStreamingImages,
+      isRecordingPaused: isRecordingPaused,
+      autoFocusEnabled: autoFocusEnabled,
+      flashMode: flashMode,
+      sensorSensitivity: sensorSensitivity,
+      lensAperture: lensAperture,
+      sensorExposure: sensorExposure,
+      whiteBalance: whiteBalance,
+    );
+  }
+
+  CameraValue copyWithSensorExposure(int? sensorExposure) {
+    return CameraValue(
+      isInitialized: isInitialized,
+      errorDescription: errorDescription,
+      previewSize: previewSize,
+      isRecordingVideo: isRecordingVideo,
+      isTakingPicture: isTakingPicture,
+      isStreamingImages: isStreamingImages,
+      isRecordingPaused: isRecordingPaused,
+      autoFocusEnabled: autoFocusEnabled,
+      flashMode: flashMode,
+      sensorSensitivity: sensorSensitivity,
+      lensAperture: lensAperture,
+      sensorExposure: sensorExposure,
+      whiteBalance: whiteBalance,
+    );
+  }
+
+  CameraValue copyWithWhiteBalance(int? whiteBalance) {
+    return CameraValue(
+      isInitialized: isInitialized,
+      errorDescription: errorDescription,
+      previewSize: previewSize,
+      isRecordingVideo: isRecordingVideo,
+      isTakingPicture: isTakingPicture,
+      isStreamingImages: isStreamingImages,
+      isRecordingPaused: isRecordingPaused,
+      autoFocusEnabled: autoFocusEnabled,
+      flashMode: flashMode,
+      sensorSensitivity: sensorSensitivity,
+      lensAperture: lensAperture,
+      sensorExposure: sensorExposure,
+      whiteBalance: whiteBalance,
     );
   }
 
@@ -340,8 +386,7 @@ class CameraController extends ValueNotifier<CameraValue> {
     }
     try {
       _creatingCompleter = Completer<void>();
-      final Map<String, dynamic> reply =
-          (await _channel.invokeMapMethod<String, dynamic>(
+      final Map<String, dynamic> reply = (await _channel.invokeMapMethod<String, dynamic>(
         'initialize',
         <String, dynamic>{
           'cameraName': description.name,
@@ -365,9 +410,7 @@ class CameraController extends ValueNotifier<CameraValue> {
     }
 
     _eventSubscription =
-        EventChannel('flutter.io/cameraPlugin/cameraEvents$_textureId')
-            .receiveBroadcastStream()
-            .listen(_listener);
+        EventChannel('flutter.io/cameraPlugin/cameraEvents$_textureId').receiveBroadcastStream().listen(_listener);
     _creatingCompleter!.complete();
     return _creatingCompleter!.future;
   }
@@ -480,10 +523,8 @@ class CameraController extends ValueNotifier<CameraValue> {
     } on PlatformException catch (e) {
       throw CameraException(e.code, e.message);
     }
-    const EventChannel cameraEventChannel =
-        EventChannel('plugins.flutter.io/camera/imageStream');
-    _imageStreamSubscription =
-        cameraEventChannel.receiveBroadcastStream().listen(
+    const EventChannel cameraEventChannel = EventChannel('plugins.flutter.io/camera/imageStream');
+    _imageStreamSubscription = cameraEventChannel.receiveBroadcastStream().listen(
       (dynamic imageData) {
         onAvailable(CameraImage._fromPlatformData(imageData));
       },
@@ -785,7 +826,8 @@ class CameraController extends ValueNotifier<CameraValue> {
   }
 
   /// ISO => int value
-  Future<void> setSensorSensitivity(int sensitivity) async {
+  /// null means automatic
+  Future<void> setSensorSensitivity(int? sensorSensitivity) async {
     if (!value.isInitialized! || _isDisposed) {
       throw CameraException(
         'Uninitialized CameraController.',
@@ -794,16 +836,16 @@ class CameraController extends ValueNotifier<CameraValue> {
     }
 
     try {
-      await _channel.invokeMethod('setSensorSensitivity',
-          <String, dynamic>{'sensorSensitivity': sensitivity});
-      value = value.copyWith(lastSensorSensitivity: sensitivity);
+      await _channel.invokeMethod('setSensorSensitivity', <String, dynamic>{'sensorSensitivity': sensorSensitivity});
+      value = value.copyWithSensorSensitivity(sensorSensitivity);
     } on PlatformException catch (e) {
       throw CameraException(e.code, e.message);
     }
   }
 
   /// Lens aperture => float value (f-number)
-  Future<void> setLensAperture(double lensAperture) async {
+  /// null means automatic
+  Future<void> setLensAperture(double? lensAperture) async {
     if (!value.isInitialized! || _isDisposed) {
       throw CameraException(
         'Uninitialized CameraController.',
@@ -812,16 +854,16 @@ class CameraController extends ValueNotifier<CameraValue> {
     }
 
     try {
-      await _channel.invokeMethod(
-          'setLensAperture', <String, dynamic>{'lensAperture': lensAperture});
-      value = value.copyWith(lastLensAperture: lensAperture);
+      await _channel.invokeMethod('setLensAperture', <String, dynamic>{'lensAperture': lensAperture});
+      value = value.copyWith(lensAperture: lensAperture);
     } on PlatformException catch (e) {
       throw CameraException(e.code, e.message);
     }
   }
 
   /// Shutter speed (sensor exposure) => i64 value representing the sensor exposure time in nanoseconds (1s = 1e9ns)
-  Future<void> setSensorExposure(int sensorExposure) async {
+  /// null means automatic
+  Future<void> setSensorExposure(int? sensorExposure) async {
     if (!value.isInitialized! || _isDisposed) {
       throw CameraException(
         'Uninitialized CameraController.',
@@ -830,16 +872,16 @@ class CameraController extends ValueNotifier<CameraValue> {
     }
 
     try {
-      await _channel.invokeMethod('setSensorExposure',
-          <String, dynamic>{'sensorExposure': sensorExposure});
-      value = value.copyWith(lastSensorExposure: sensorExposure);
+      await _channel.invokeMethod('setSensorExposure', <String, dynamic>{'sensorExposure': sensorExposure});
+      value = value.copyWithSensorExposure(sensorExposure);
     } on PlatformException catch (e) {
       throw CameraException(e.code, e.message);
     }
   }
 
   /// White balance (color temperature) => int value representing the temperature in kelvin
-  Future<void> setWhiteBalanceGain(int whiteBalance) async {
+  /// null means automatic
+  Future<void> setWhiteBalanceGain(int? whiteBalance) async {
     if (!value.isInitialized! || _isDisposed) {
       throw CameraException(
         'Uninitialized CameraController.',
@@ -848,9 +890,8 @@ class CameraController extends ValueNotifier<CameraValue> {
     }
 
     try {
-      await _channel.invokeMethod('setWhiteBalanceGain',
-          <String, dynamic>{'whiteBalance': whiteBalance});
-      value = value.copyWith(lastWhiteBalance: whiteBalance);
+      await _channel.invokeMethod('setWhiteBalanceGain', <String, dynamic>{'whiteBalance': whiteBalance});
+      value = value.copyWithWhiteBalance(whiteBalance);
     } on PlatformException catch (e) {
       throw CameraException(e.code, e.message);
     }
