@@ -33,11 +33,9 @@ IconData getCameraLensIcon(CameraLensDirection? direction) {
   }
 }
 
-void logError(String code, String? message) =>
-    print('Error: $code\nError Message: $message');
+void logError(String code, String? message) => print('Error: $code\nError Message: $message');
 
-class _CameraExampleHomeState extends State<CameraExampleHome>
-    with WidgetsBindingObserver {
+class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindingObserver {
   CameraController? controller;
   String? imagePath;
   late String videoPath;
@@ -49,12 +47,12 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance!.addObserver(this);
+    WidgetsBinding.instance.addObserver(this);
   }
 
   @override
   void dispose() {
-    WidgetsBinding.instance!.removeObserver(this);
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
@@ -89,25 +87,24 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
               child: Padding(
                 padding: const EdgeInsets.all(1.0),
                 child: Center(
-                    child: ZoomableWidget(
-                        child: _cameraPreviewWidget(),
-                        onTapUp: (scaledPoint) {
-                          //controller.setPointOfInterest(scaledPoint);
-                        },
-                        onZoom: (zoom) {
-                          print('zoom');
-                          if (zoom < 11) {
-                            controller!.zoom(zoom);
-                          }
-                        })),
+                  child: ZoomableWidget(
+                    child: _cameraPreviewWidget(),
+                    onTapUp: (scaledPoint) {
+                      //controller.setPointOfInterest(scaledPoint);
+                    },
+                    onZoom: (zoom) {
+                      print('zoom');
+                      if (zoom < 11) {
+                        controller!.zoom(zoom);
+                      }
+                    },
+                  ),
+                ),
               ),
               decoration: BoxDecoration(
                 color: Colors.black,
                 border: Border.all(
-                  color:
-                      controller != null && controller!.value.isRecordingVideo!
-                          ? Colors.redAccent
-                          : Colors.grey,
+                  color: controller != null && controller!.value.isRecordingVideo! ? Colors.redAccent : Colors.grey,
                   width: 3.0,
                 ),
               ),
@@ -186,14 +183,13 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
                         : Container(
                             child: Center(
                               child: AspectRatio(
-                                  aspectRatio:
-                                      videoController!.value.size != null
-                                          ? videoController!.value.aspectRatio
-                                          : 1.0,
-                                  child: VideoPlayer(videoController!)),
+                                aspectRatio: videoController!.value.aspectRatio,
+                                child: VideoPlayer(videoController!),
+                              ),
                             ),
                             decoration: BoxDecoration(
-                                border: Border.all(color: Colors.pink)),
+                              border: Border.all(color: Colors.pink),
+                            ),
                           ),
                     width: 64.0,
                     height: 64.0,
@@ -213,29 +209,21 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
         IconButton(
           icon: const Icon(Icons.camera_alt),
           color: Colors.blue,
-          onPressed: controller != null &&
-                  controller!.value.isInitialized! &&
-                  !controller!.value.isRecordingVideo!
+          onPressed: controller != null && controller!.value.isInitialized! && !controller!.value.isRecordingVideo!
               ? onTakePictureButtonPressed
               : null,
         ),
         IconButton(
           icon: const Icon(Icons.videocam),
           color: Colors.blue,
-          onPressed: controller != null &&
-                  controller!.value.isInitialized! &&
-                  !controller!.value.isRecordingVideo!
+          onPressed: controller != null && controller!.value.isInitialized! && !controller!.value.isRecordingVideo!
               ? onVideoRecordButtonPressed
               : null,
         ),
         IconButton(
-          icon: controller != null && controller!.value.isRecordingPaused
-              ? Icon(Icons.play_arrow)
-              : Icon(Icons.pause),
+          icon: controller != null && controller!.value.isRecordingPaused ? Icon(Icons.play_arrow) : Icon(Icons.pause),
           color: Colors.blue,
-          onPressed: controller != null &&
-                  controller!.value.isInitialized! &&
-                  controller!.value.isRecordingVideo!
+          onPressed: controller != null && controller!.value.isInitialized! && controller!.value.isRecordingVideo!
               ? (controller != null && controller!.value.isRecordingPaused
                   ? onResumeButtonPressed
                   : onPauseButtonPressed)
@@ -246,17 +234,13 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
               ? Icon(Icons.access_alarm)
               : Icon(Icons.access_alarms),
           color: Colors.blue,
-          onPressed: (controller != null && controller!.value.isInitialized!)
-              ? toogleAutoFocus
-              : null,
+          onPressed: (controller != null && controller!.value.isInitialized!) ? toogleAutoFocus : null,
         ),
         _flashButton(),
         IconButton(
           icon: const Icon(Icons.stop),
           color: Colors.red,
-          onPressed: controller != null &&
-                  controller!.value.isInitialized! &&
-                  controller!.value.isRecordingVideo!
+          onPressed: controller != null && controller!.value.isInitialized! && controller!.value.isRecordingVideo!
               ? onStopButtonPressed
               : null,
         ),
@@ -278,15 +262,12 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
     return IconButton(
       icon: Icon(iconData),
       color: color,
-      onPressed: controller != null && controller!.value.isInitialized!
-          ? _onFlashButtonPressed
-          : null,
+      onPressed: controller != null && controller!.value.isInitialized! ? _onFlashButtonPressed : null,
     );
   }
 
   /// Toggle Flash
   Future<void> _onFlashButtonPressed() async {
-    bool hasFlash = false;
     if (flashMode == FlashMode.off || flashMode == FlashMode.torch) {
       // Turn on the flash for capture
       flashMode = FlashMode.alwaysFlash;
@@ -319,10 +300,7 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
               title: Icon(getCameraLensIcon(cameraDescription.lensDirection)),
               groupValue: controller?.description,
               value: cameraDescription,
-              onChanged:
-                  controller != null && controller!.value.isRecordingVideo!
-                      ? null
-                      : onNewCameraSelected,
+              onChanged: controller != null && controller!.value.isRecordingVideo! ? null : onNewCameraSelected,
             ),
           ),
         );
@@ -335,7 +313,8 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
   String timestamp() => DateTime.now().millisecondsSinceEpoch.toString();
 
   void showInSnackBar(String message) {
-    _scaffoldKey.currentState!.showSnackBar(SnackBar(content: Text(message)));
+    if (_scaffoldKey.currentContext == null) return;
+    ScaffoldMessenger.of(_scaffoldKey.currentContext!).showSnackBar(SnackBar(content: Text(message)));
   }
 
   void onNewCameraSelected(CameraDescription? cameraDescription) async {
@@ -481,10 +460,9 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
   }
 
   Future<void> _startVideoPlayer() async {
-    final VideoPlayerController vcontroller =
-        VideoPlayerController.file(File(videoPath));
+    final VideoPlayerController vcontroller = VideoPlayerController.file(File(videoPath));
     videoPlayerListener = () {
-      if (videoController != null && videoController!.value.size != null) {
+      if (videoController != null) {
         // Refreshing the state to update video player with the correct ratio.
         if (mounted) setState(() {});
         videoController!.removeListener(videoPlayerListener);
@@ -537,9 +515,6 @@ class CameraApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      theme: ThemeData(
-        accentTextTheme: TextTheme(body2: TextStyle(color: Colors.white)),
-      ),
       home: CameraExampleHome(),
     );
   }
@@ -564,8 +539,7 @@ class ZoomableWidget extends StatefulWidget {
   final Function? onZoom;
   final Function? onTapUp;
 
-  const ZoomableWidget({Key? key, this.child, this.onZoom, this.onTapUp})
-      : super(key: key);
+  const ZoomableWidget({Key? key, this.child, this.onZoom, this.onTapUp}) : super(key: key);
 
   @override
   _ZoomableWidgetState createState() => _ZoomableWidgetState();
@@ -605,29 +579,29 @@ class _ZoomableWidgetState extends State<ZoomableWidget> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-        onScaleStart: (scaleDetails) {
-          print('scalStart');
-          setState(() => prevZoom = zoom);
-          //print(scaleDetails);
-        },
-        onScaleUpdate: (ScaleUpdateDetails scaleDetails) {
-          var newZoom = (prevZoom * scaleDetails.scale);
+      onScaleStart: (scaleDetails) {
+        print('scalStart');
+        setState(() => prevZoom = zoom);
+        //print(scaleDetails);
+      },
+      onScaleUpdate: (ScaleUpdateDetails scaleDetails) {
+        var newZoom = (prevZoom * scaleDetails.scale);
 
-          handleZoom(newZoom);
-        },
-        onScaleEnd: (scaleDetails) {
-          print('end');
-          //print(scaleDetails);
-        },
-        onTapUp: (TapUpDetails det) {
-          final RenderBox box = context.findRenderObject() as RenderBox;
-          final Offset localPoint = box.globalToLocal(det.globalPosition);
-          final Offset scaledPoint =
-              localPoint.scale(1 / box.size.width, 1 / box.size.height);
-          // TODO IMPLIMENT
-          // widget.onTapUp(scaledPoint);
-        },
-        child: Stack(children: [
+        handleZoom(newZoom);
+      },
+      onScaleEnd: (scaleDetails) {
+        print('end');
+        //print(scaleDetails);
+      },
+      onTapUp: (TapUpDetails det) {
+        // TODO IMPLIMENT
+        // final RenderBox box = context.findRenderObject() as RenderBox;
+        // final Offset localPoint = box.globalToLocal(det.globalPosition);
+        // final Offset scaledPoint = localPoint.scale(1 / box.size.width, 1 / box.size.height);
+        // widget.onTapUp(scaledPoint);
+      },
+      child: Stack(
+        children: [
           Column(
             children: <Widget>[
               Container(
@@ -641,49 +615,47 @@ class _ZoomableWidgetState extends State<ZoomableWidget> {
             visible: showZoom, //Default is true,
             child: Positioned.fill(
               child: Container(
-                  child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisSize: MainAxisSize.max,
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: <Widget>[
-                  Align(
-                    alignment: Alignment.bottomCenter,
-                    child: SliderTheme(
-                      data: SliderTheme.of(context).copyWith(
-                        valueIndicatorTextStyle: TextStyle(
-                            color: Colors.amber,
-                            letterSpacing: 2.0,
-                            fontSize: 30),
-                        valueIndicatorColor: Colors.blue,
-                        // This is what you are asking for
-                        inactiveTrackColor: Color(0xFF8D8E98),
-                        // Custom Gray Color
-                        activeTrackColor: Colors.white,
-                        thumbColor: Colors.red,
-                        overlayColor: Color(0x29EB1555),
-                        // Custom Thumb overlay Color
-                        thumbShape:
-                            RoundSliderThumbShape(enabledThumbRadius: 12.0),
-                        overlayShape:
-                            RoundSliderOverlayShape(overlayRadius: 20.0),
-                      ),
-                      child: Slider(
-                        value: zoom,
-                        onChanged: (double newValue) {
-                          handleZoom(newValue);
-                        },
-                        label: "$zoom",
-                        min: 1,
-                        max: 10,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.max,
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: <Widget>[
+                    Align(
+                      alignment: Alignment.bottomCenter,
+                      child: SliderTheme(
+                        data: SliderTheme.of(context).copyWith(
+                          valueIndicatorTextStyle: TextStyle(color: Colors.amber, letterSpacing: 2.0, fontSize: 30),
+                          valueIndicatorColor: Colors.blue,
+                          // This is what you are asking for
+                          inactiveTrackColor: Color(0xFF8D8E98),
+                          // Custom Gray Color
+                          activeTrackColor: Colors.white,
+                          thumbColor: Colors.red,
+                          overlayColor: Color(0x29EB1555),
+                          // Custom Thumb overlay Color
+                          thumbShape: RoundSliderThumbShape(enabledThumbRadius: 12.0),
+                          overlayShape: RoundSliderOverlayShape(overlayRadius: 20.0),
+                        ),
+                        child: Slider(
+                          value: zoom,
+                          onChanged: (double newValue) {
+                            handleZoom(newValue);
+                          },
+                          label: "$zoom",
+                          min: 1,
+                          max: 10,
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              )),
+                  ],
+                ),
+              ),
             ),
             //maintainSize: bool. When true this is equivalent to invisible;
             //replacement: Widget. Defaults to Sizedbox.shrink, 0x0
-          )
-        ]));
+          ),
+        ],
+      ),
+    );
   }
 }
