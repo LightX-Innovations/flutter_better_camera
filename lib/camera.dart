@@ -182,6 +182,7 @@ class CameraValue {
     this.lensAperture,
     this.sensorExposure,
     this.whiteBalance,
+    this.lensPosition,
     bool? isRecordingPaused,
   }) : _isRecordingPaused = isRecordingPaused;
 
@@ -245,6 +246,9 @@ class CameraValue {
   /// Last value set using [setWhiteBalanceGain]
   final int? whiteBalance;
 
+  /// Last value set using [setFocusModeLockedWithLensPosition]
+  final double? lensPosition;
+
   CameraValue copyWith({
     bool? isInitialized,
     bool? isRecordingVideo,
@@ -259,6 +263,7 @@ class CameraValue {
     double? lensAperture,
     int? sensorExposure,
     int? whiteBalance,
+    double? lensPosition,
   }) {
     return CameraValue(
       isInitialized: isInitialized ?? this.isInitialized,
@@ -274,6 +279,7 @@ class CameraValue {
       lensAperture: lensAperture ?? this.lensAperture,
       sensorExposure: sensorExposure ?? this.sensorExposure,
       whiteBalance: whiteBalance ?? this.whiteBalance,
+      lensPosition: lensPosition ?? this.lensPosition,
     );
   }
 
@@ -292,6 +298,7 @@ class CameraValue {
       lensAperture: lensAperture,
       sensorExposure: sensorExposure,
       whiteBalance: whiteBalance,
+      lensPosition: lensPosition,
     );
   }
 
@@ -310,6 +317,7 @@ class CameraValue {
       lensAperture: lensAperture,
       sensorExposure: sensorExposure,
       whiteBalance: whiteBalance,
+      lensPosition: lensPosition,
     );
   }
 
@@ -328,6 +336,7 @@ class CameraValue {
       lensAperture: lensAperture,
       sensorExposure: sensorExposure,
       whiteBalance: whiteBalance,
+      lensPosition: lensPosition,
     );
   }
 
@@ -746,6 +755,7 @@ class CameraController extends ValueNotifier<CameraValue> {
         'setFocusModeLockedWithLensPosition',
         <String, dynamic>{'lensPosition': lensPosition},
       );
+      value = value.copyWith(lensPosition: lensPosition);
     } on PlatformException catch (e) {
       throw CameraException(e.code, e.message);
     }
