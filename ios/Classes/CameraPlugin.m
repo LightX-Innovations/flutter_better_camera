@@ -806,7 +806,6 @@ FourCharCode const videoFormat = kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange
     [_captureDevice unlockForConfiguration];
 }
 
-
 - (void)zoom:(double)zoom {
 
     NSError *error = nil;
