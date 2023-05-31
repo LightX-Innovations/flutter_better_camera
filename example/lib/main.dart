@@ -98,6 +98,10 @@ class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindi
                         controller!.zoom(zoom);
                       }
                     },
+                    onFocus: (lensPosition) {
+                      print('focus to: $lensPosition');
+                      controller!.setFocusModeLockedWithLensPosition(lensPosition);
+                    },
                   ),
                 ),
               ),
@@ -337,6 +341,12 @@ class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindi
 
     try {
       await controller!.initialize();
+      final isLockFocusSupported = await controller!.isLockingFocusWithCustomLensPositionSupported();
+      print('isLockFocusSupported: $isLockFocusSupported');
+      final lensPosition = await controller!.getLensPosition();
+      print('lensPosition: $lensPosition');
+      final captureLensPositionCurrent = await controller!.getAVCaptureLensPositionCurrent();
+      print('captureLensPositionCurrent: $captureLensPositionCurrent');
     } on CameraException catch (e) {
       _showCameraException(e);
     }
@@ -537,9 +547,10 @@ Future<void> main() async {
 class ZoomableWidget extends StatefulWidget {
   final Widget? child;
   final Function? onZoom;
+  final Function? onFocus;
   final Function? onTapUp;
 
-  const ZoomableWidget({Key? key, this.child, this.onZoom, this.onTapUp}) : super(key: key);
+  const ZoomableWidget({Key? key, this.child, this.onZoom, this.onFocus, this.onTapUp}) : super(key: key);
 
   @override
   _ZoomableWidgetState createState() => _ZoomableWidgetState();
@@ -548,6 +559,7 @@ class ZoomableWidget extends StatefulWidget {
 class _ZoomableWidgetState extends State<ZoomableWidget> {
   Matrix4 matrix = Matrix4.identity();
   double zoom = 1;
+  double focusLensPosition = 0.5;
   double prevZoom = 1;
   bool showZoom = false;
   Timer? t1;
@@ -573,6 +585,19 @@ class _ZoomableWidgetState extends State<ZoomableWidget> {
       });
     }
     widget.onZoom!(zoom);
+    return true;
+  }
+
+  bool handleFocusLensPosition(newLensPosition) {
+    setState(() {
+      focusLensPosition = newLensPosition;
+    });
+
+    if (t1 != null) {
+      t1!.cancel();
+    }
+
+    widget.onFocus!(newLensPosition);
     return true;
   }
 
@@ -644,6 +669,33 @@ class _ZoomableWidgetState extends State<ZoomableWidget> {
                           label: "$zoom",
                           min: 1,
                           max: 10,
+                        ),
+                      ),
+                    ),
+                    Align(
+                      alignment: Alignment.bottomCenter,
+                      child: SliderTheme(
+                        data: SliderTheme.of(context).copyWith(
+                          valueIndicatorTextStyle: TextStyle(color: Colors.amber, letterSpacing: 2.0, fontSize: 30),
+                          valueIndicatorColor: Colors.blue,
+                          // This is what you are asking for
+                          inactiveTrackColor: Color(0xFF8D8E98),
+                          // Custom Gray Color
+                          activeTrackColor: Colors.white,
+                          thumbColor: Colors.red,
+                          overlayColor: Color(0x29EB1555),
+                          // Custom Thumb overlay Color
+                          thumbShape: RoundSliderThumbShape(enabledThumbRadius: 12.0),
+                          overlayShape: RoundSliderOverlayShape(overlayRadius: 20.0),
+                        ),
+                        child: Slider(
+                          value: focusLensPosition,
+                          onChanged: (double newValue) {
+                            handleFocusLensPosition(newValue);
+                          },
+                          label: "$focusLensPosition",
+                          min: 0,
+                          max: 1,
                         ),
                       ),
                     ),
