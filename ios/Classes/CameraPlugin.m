@@ -773,6 +773,39 @@ FourCharCode const videoFormat = kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange
     [_captureDevice unlockForConfiguration];
 }
 
+- (BOOL)isLockingFocusWithCustomLensPositionSupported {
+    return [_captureDevice isLockingFocusWithCustomLensPositionSupported];
+}
+
+- (double)getLensPosition {
+    return (double)[_captureDevice lensPosition];
+}
+
+-(double)getAVCaptureLensPositionCurrent {
+    return (double)AVCaptureLensPositionCurrent;
+}
+
+- (void)setFocusModeLockedWithLensPosition:(double)lensPosition
+                         completionHandler:(void (^)(CMTime syncTime))handler {
+
+    NSError *error = nil;
+
+    if (_captureDevice == nil) {
+        return;
+    }
+
+    if (![_captureDevice isLockingFocusWithCustomLensPositionSupported]) {
+        return;
+    }
+
+    if (![_captureDevice lockForConfiguration:&error]) {
+        return;
+    }
+
+    [_captureDevice setFocusModeLockedWithLensPosition: (float)lensPosition completionHandler:handler];
+    [_captureDevice unlockForConfiguration];
+}
+
 - (void)zoom:(double)zoom {
 
     NSError *error = nil;
@@ -1230,6 +1263,16 @@ FourCharCode const videoFormat = kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange
     [result send:nil];
   } else if ([@"autoExposureOff" isEqualToString:call.method]) {
     [_camera setAutoExposureMode:false];
+  } else if ([@"isLockingFocusWithCustomLensPositionSupported" isEqualToString:call.method]) {
+    [result send:@([_camera isLockingFocusWithCustomLensPositionSupported])];
+  } else if ([@"getLensPosition" isEqualToString:call.method]) {
+    [result send:@([_camera getLensPosition])];
+  } else if ([@"getAVCaptureLensPositionCurrent" isEqualToString:call.method]) {
+    [result send:@([_camera getAVCaptureLensPositionCurrent])];
+  } else if ([@"setFocusModeLockedWithLensPosition" isEqualToString:call.method]) {
+    float lensPosition = [call.arguments[@"lensPosition"] doubleValue];
+    [_camera setFocusModeLockedWithLensPosition:lensPosition completionHandler:nil];
+    [result send:nil];
   } else if ([@"zoom" isEqualToString:call.method]){
     NSNumber *step = call.arguments[@"step"];
     [_camera zoom:[step doubleValue]];

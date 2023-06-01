@@ -182,6 +182,7 @@ class CameraValue {
     this.lensAperture,
     this.sensorExposure,
     this.whiteBalance,
+    this.lensPosition,
     bool? isRecordingPaused,
   }) : _isRecordingPaused = isRecordingPaused;
 
@@ -245,6 +246,9 @@ class CameraValue {
   /// Last value set using [setWhiteBalanceGain]
   final int? whiteBalance;
 
+  /// Last value set using [setFocusModeLockedWithLensPosition]
+  final double? lensPosition;
+
   CameraValue copyWith({
     bool? isInitialized,
     bool? isRecordingVideo,
@@ -259,6 +263,7 @@ class CameraValue {
     double? lensAperture,
     int? sensorExposure,
     int? whiteBalance,
+    double? lensPosition,
   }) {
     return CameraValue(
       isInitialized: isInitialized ?? this.isInitialized,
@@ -274,6 +279,7 @@ class CameraValue {
       lensAperture: lensAperture ?? this.lensAperture,
       sensorExposure: sensorExposure ?? this.sensorExposure,
       whiteBalance: whiteBalance ?? this.whiteBalance,
+      lensPosition: lensPosition ?? this.lensPosition,
     );
   }
 
@@ -292,6 +298,7 @@ class CameraValue {
       lensAperture: lensAperture,
       sensorExposure: sensorExposure,
       whiteBalance: whiteBalance,
+      lensPosition: lensPosition,
     );
   }
 
@@ -310,6 +317,7 @@ class CameraValue {
       lensAperture: lensAperture,
       sensorExposure: sensorExposure,
       whiteBalance: whiteBalance,
+      lensPosition: lensPosition,
     );
   }
 
@@ -328,6 +336,7 @@ class CameraValue {
       lensAperture: lensAperture,
       sensorExposure: sensorExposure,
       whiteBalance: whiteBalance,
+      lensPosition: lensPosition,
     );
   }
 
@@ -694,6 +703,59 @@ class CameraController extends ValueNotifier<CameraValue> {
         'setAutoFocus',
         <String, dynamic>{'autoFocusValue': newValue},
       );
+    } on PlatformException catch (e) {
+      throw CameraException(e.code, e.message);
+    }
+  }
+
+  // A Boolean value that indicates whether the device supports locking focus to a specific lens position.
+  // source: https://developer.apple.com/documentation/avfoundation/avcapturedevice/2361529-lockingfocuswithcustomlenspositi?language=objc
+  Future<bool?> isLockingFocusWithCustomLensPositionSupported() async {
+    try {
+      return await _channel.invokeMethod<bool>('isLockingFocusWithCustomLensPositionSupported');
+    } on PlatformException catch (e) {
+      throw CameraException(e.code, e.message);
+    }
+  }
+
+  // The current focus position of the lens.
+  // A lens position value doesn’t correspond to an exact physical distance, nor does it represent a consistent focus
+  // distance from device to device. The range of possible positions is 0.0 to 1.0, with 0.0 being the shortest distance
+  // at which the lens can focus and 1.0 the furthest. Note that 1.0 doesn’t represent focus at infinity.
+  // The default value is 1.0.
+  // source: https://developer.apple.com/documentation/avfoundation/avcapturedevice/1624643-lensposition?language=objc
+  Future<double?> getLensPosition() async {
+    try {
+      return await _channel.invokeMethod<double>('getLensPosition');
+    } on PlatformException catch (e) {
+      throw CameraException(e.code, e.message);
+    }
+  }
+
+  // A constant that represents the current lens position.
+  // Pass this value to the setFocusModeLockedWithLensPosition method to lock focus without changing the current
+  // lens position.
+  // source: https://developer.apple.com/documentation/avfoundation/avcapturelenspositioncurrent?language=objc
+  Future<double?> getAVCaptureLensPositionCurrent() async {
+    try {
+      return await _channel.invokeMethod<double>('getAVCaptureLensPositionCurrent');
+    } on PlatformException catch (e) {
+      throw CameraException(e.code, e.message);
+    }
+  }
+
+  // Locks the lens position at the specified value, and sets the focus mode to a locked state.
+  // Calling this method is the only way to set the value of the lensPosition property. This method throws an exception
+  // if you set the value to an unsupported level.
+  //source: https://developer.apple.com/documentation/avfoundation/avcapturedevice/1624617-setfocusmodelockedwithlenspositi?language=objc
+  Future<void> setFocusModeLockedWithLensPosition(double lensPosition) async {
+    assert(lensPosition >= 0.0 && lensPosition <= 1.0);
+    try {
+      await _channel.invokeMethod<void>(
+        'setFocusModeLockedWithLensPosition',
+        <String, dynamic>{'lensPosition': lensPosition},
+      );
+      value = value.copyWith(lensPosition: lensPosition);
     } on PlatformException catch (e) {
       throw CameraException(e.code, e.message);
     }
