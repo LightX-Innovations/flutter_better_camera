@@ -1132,9 +1132,12 @@ FourCharCode const videoFormat = kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange
 }
 
 - (void)handleMethodCall:(FlutterMethodCall *)call result:(FlutterResult)result API_AVAILABLE(ios(10)) {
-  if (_dispatchQueue == nil) {
-    _dispatchQueue = dispatch_queue_create("io.flutter.camera.dispatchqueue", NULL);
-  }
+    static dispatch_queue_t _dispatchQueue = nil;
+    static dispatch_once_t onceToken;
+    
+    dispatch_once(&onceToken, ^{
+        _dispatchQueue = dispatch_queue_create("io.flutter.camera.dispatchqueue", NULL);
+    });
 
   // Invoke the plugin on another dispatch queue to avoid blocking the UI.
   dispatch_async(_dispatchQueue, ^{
